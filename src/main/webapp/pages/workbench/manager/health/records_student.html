@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>records</title>
+    <script src="../../../../js/vue.min.js"></script>
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+
+        .el-tag + .el-tag {
+            margin-left: 10px;
+        }
+
+        .button-new-tag {
+            margin-left: 10px;
+            height: 32px;
+            line-height: 30px;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .input-new-tag {
+            width: 90px;
+            margin-left: 10px;
+            vertical-align: bottom;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>学生健康打卡记录</h1>
+
+    <el-row :gutter="12">
+        <el-col :span="5">
+            <el-card shadow="always" style="font-size: 20px">
+                &nbsp;&nbsp;当前时间：{{time}}
+            </el-card>
+        </el-col>
+        <el-col :span="5">
+            <el-date-picker
+                    v-model="choseTime"
+                    type="date"
+                    placeholder="选择日期"
+                    @change="flag = true;comparDate(choseTime)"
+                    style="left:300px"
+                    :clearable="false"
+            >
+            </el-date-picker>
+        </el-col>
+        <el-col :span="5">
+            <el-select v-model="deptId" clearable placeholder="选择院系" style="left: 200px"
+                       @visible-change="showDepts()" @change="isReadyonly = '0';pageQuery()"
+                       @clear="clazzId='';pageQuery();isReadyonly='1';">
+                <el-option
+                        v-for="item in depts"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id">
+                </el-option>
+            </el-select>
+        </el-col>
+        <el-col :span="5">
+            <el-select v-model="clazzId" clearable placeholder="选择班级" style="left: 100px"
+                       :disabled="isReadyonly=='1'"
+                       @visible-change="showClazzs()" @change="pageQuery()" @clear="pageQuery()">
+                <el-option
+                        v-for="item in clazzs"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id">
+                </el-option>
+            </el-select>
+        </el-col>
+        <el-col :span="4">
+            <el-select v-model="clockType" placeholder="选择打卡状态" style="" @change="pageQuery()">
+                <el-option
+                        v-for="item in checks"
+                        :key="item.clockType"
+                        :label="item.label"
+                        :value="item.clockType">
+                </el-option>
+            </el-select>
+
+        </el-col>
+    </el-row>
+    <br>
+    <div style="font-size: 10px;margin:10px;opacity:0.5">标签类型：体温异常 隔离中 处于中高风险地区 不在校</div>
+    <div>
+        <!--        <span class="demonstration">日期：</span>-->
+        <el-tag
+                :key="tag"
+                v-for="tag in dynamicTags"
+                closable
+                :disable-transitions="false"
+                @close="handleClose(tag)">
+            {{tag}}
+        </el-tag>
+        <el-input
+                class="input-new-tag"
+                v-if="inputVisible"
+                v-model="inputValue"
+                ref="saveTagInput"
+                size="small"
+                @keyup.enter.native="handleInputConfirm"
+                @blur="handleInputConfirm"
+        >
+        </el-input>
+        <el-button v-else class="button-new-tag" size="medium" @click="showInput">+ 新标签</el-button>
+        <el-button type="primary" icon="el-icon-folder-opened" size="small" style="margin-left: 30px" @click="exportClockMeg()">导出表格
+        </el-button>
+    </div>
+
+    <template>
+
+        <el-table
+
+                :data="tableData"
+                stripe
+                style="width: 100%">
+            <!--            {{tableData[index].id}}-->
+            <el-table-column
+
+                    prop="clockTime"
+                    label="日期"
+                    align="left"
+                    width="100"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="userName"
+                    label="姓名"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="clazzName"
+                    label="班级"
+                    width="120"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="morningCheck"
+                    label="晨检体温是否超过37.3°C"
+                    align="center">
+                <template slot-scope="scope">
+                    <template v-if="scope.row.morningCheck == '是' ">
+                        <font color="red">{{scope.row.morningCheck}}</font>
+                    </template>
+                    <template v-else-if="scope.row.morningCheck == '否'">
+                        <font>{{scope.row.morningCheck}}</font>
+                    </template>
+                    <template v-else-if="scope.row.morningCheck == '暂无数据'">
+                        <font color="#909399">{{scope.row.morningCheck}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    label="午检体温是否超过37.3°C"
+                    align="center"
+            >
+                <template slot-scope="scope">
+                    <template v-if="scope.row.afternoonCheck == '是' ">
+                        <font color="red">{{scope.row.afternoonCheck}}</font>
+                    </template>
+                    <template v-else-if="scope.row.afternoonCheck == '否'">
+                        <font>{{scope.row.afternoonCheck}}</font>
+                    </template>
+                    <template v-else-if="scope.row.afternoonCheck == '暂无数据'">
+                        <font color="#909399">{{scope.row.afternoonCheck}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="inSchool"
+                    label="是否在校"
+                    align="center">
+                <template slot-scope="scope">
+                    <template v-if="scope.row.inSchool == '否' ">
+                        <font color="red">{{scope.row.inSchool}}</font>
+                    </template>
+                    <template v-else-if="scope.row.inSchool == '是'">
+                        <font>{{scope.row.inSchool}}</font>
+                    </template>
+                    <template v-else-if="scope.row.inSchool == '暂无数据'">
+                        <font color="#909399">{{scope.row.inSchool}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="inRisk"
+                    label="是否在疫情中高风险地区"
+                    align="center"
+            >
+                <template slot-scope="scope">
+                    <template v-if="scope.row.inRisk == '是' ">
+                        <font color="red">{{scope.row.inRisk}}</font>
+                    </template>
+                    <template v-else-if="scope.row.inRisk == '否'">
+                        <font>{{scope.row.inRisk}}</font>
+                    </template>
+                    <template v-else-if="scope.row.inRisk == '暂无数据'">
+                        <font color="#909399">{{scope.row.inRisk}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="inIsolation"
+                    label="是否处于医学隔离"
+                    align="center"
+            >
+                <template slot-scope="scope">
+                    <template v-if="scope.row.inIsolation == '是' ">
+                        <font color="red">{{scope.row.inIsolation}}</font>
+                    </template>
+                    <template v-else-if="scope.row.inIsolation == '否'">
+                        <font>{{scope.row.inIsolation}}</font>
+                    </template>
+
+                    <template v-else-if="scope.row.inIsolation == '暂无数据'">
+                        <font color="#909399">{{scope.row.inIsolation}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="check"
+                    label="打卡状态"
+                    align="center"
+                    width="90"
+            >
+                <template v-if="this.clockType == '未打卡' ">
+                    <font color="red">{{this.clockType}}</font>
+                </template>
+                <template v-if="this.clockType == '已打卡' ">
+                    <font color="#228b22">{{this.clockType}}</font>
+                </template>
+            </el-table-column>
+
+            <!--            <v-if=></v-if>-->
+        </el-table>
+    </template>
+    <div style="margin-left: 33%">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page.sync="currentPage1"
+                :page-size="pageSize"
+                layout="total, prev, pager, next"
+                :total="totals">
+        </el-pagination>
+    </div>
+
+
+</div>
+</body>
+<script type="text/javascript">
+    var date = new Date();
+    var date1 = new Date();
+    date1 = date1.setDate(date1.getDate() - 1);
+    date1 = new Date(date1);
+    // 获取当前月份
+    var nowMonth = date.getMonth() + 1;
+    // 获取当前是几号
+    var strDate = date.getDate();
+    // 添加分隔符“-”
+    var seperator = "";
+    // 对月份进行处理，1-9月在前面添加一个“0”
+    if (nowMonth >= 1 && nowMonth <= 9) {
+        nowMonth = "0" + nowMonth;
+    }
+    // 对月份进行处理，1-9号在前面添加一个“0”
+    if (strDate >= 0 && strDate <= 9) {
+        strDate = "0" + strDate;
+    }
+    var nowDate = date.getFullYear() + '-' + seperator + nowMonth + '-' + seperator + +strDate;
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                tableData: [{}],
+                //当前页码
+                currentPage1: 1,
+                //每页条数
+                pageSize: 10,
+                //总条数
+                totals: 1000,
+                time: nowDate,
+                choseTime: date,
+                checks: [{
+                    clockType: '已打卡',
+                    label: '已打卡'
+                }, {
+                    clockType: '未打卡',
+                    label: '未打卡'
+                }],
+                clockType: '已打卡',
+                clazzs: [{}],
+                clazzId: '',
+                depts: [{}],
+                deptId: '',
+                isReadyonly: '1',
+                dynamicTags: [],
+                inputVisible: false,
+                inputValue: '',
+                flag: false,
+            }
+        },
+        mounted() {
+            var jsonDynamicTags = this.dynamicTags.toString();
+            axios.get('http://127.0.0.1:8080/cec/pages/workbench/manager/health/pageQuery', {
+                params: {
+                    pageNum: this.currentPage1,
+                    pageSize: this.pageSize,
+                    clockTime: this.choseTime,
+                    deptId: this.deptId,
+                    clazzId: this.clazzId,
+                    clockType: this.clockType,
+                    flag: this.flag,
+                    dynamicTags: jsonDynamicTags
+                }
+            }).then(function (response) {
+                if (vm.clockType == '已打卡') {
+                    vm.totals = response.data.totals;
+                    vm.tableData = response.data.rows;
+                } else if (vm.clockType == '未打卡') {
+                    vm.totals = response.data.totals;
+                    vm.tableData = response.data.rows;
+                }
+            })
+        },
+        methods: {
+            comparDate(dateValue) {
+                // return new Date().getTime() >= new Date(dateValue).getTime() + 3600 * 1000 * 24;
+                if (new Date().getTime() < new Date(dateValue).getTime()) {
+                    Vue.prototype.$message({
+                        message: '必须小于现在时间',
+                        type: 'error'
+                    });
+                    this.choseTime = date;
+                } else {
+                    this.pageQuery();
+                }
+            },
+            exportClockMeg() {
+                var jsonDynamicTags = this.dynamicTags.toString();
+                axios({
+                    method: 'get',
+                    url: 'http://127.0.0.1:8080/cec/pages/workbench/manager/health/exportClockMeg',
+                    params: {
+                        pageNum: this.currentPage1,
+                        pageSize: this.pageSize,
+                        clockTime: this.choseTime,
+                        deptId: this.deptId,
+                        clazzId: this.clazzId,
+                        clockType: this.clockType,
+                        flag: this.flag,
+                        dynamicTags: jsonDynamicTags
+                    },
+                    responseType: 'blob'
+                }).then((res) => {
+                    console.log(res)
+                    const link = document.createElement('a')
+                    let blob = new Blob([res.data], {type: 'application/vnd.ms-excel'});
+                    link.style.display = 'none'
+                    link.href = URL.createObjectURL(blob);
+                    console.log("href:" + link.href)
+                    var date = new Date(this.choseTime);
+                    // 获取当前月份
+                    var nowMonth = date.getMonth() + 1;
+                    // 获取当前是几号
+                    var strDate = date.getDate();
+                    // 添加分隔符“-”
+                    var seperator = "";
+                    // 对月份进行处理，1-9月在前面添加一个“0”
+                    if (nowMonth >= 1 && nowMonth <= 9) {
+                        nowMonth = "0" + nowMonth;
+                    }
+                    // 对月份进行处理，1-9号在前面添加一个“0”
+                    if (strDate >= 0 && strDate <= 9) {
+                        strDate = "0" + strDate;
+                    }
+                    var nowDate = date.getFullYear() + '-' + seperator + nowMonth + '-' + seperator + +strDate;
+                    let filename = nowDate;
+                    axios.get('http://127.0.0.1:8080/cec/pages/workbench/manager/health/queryFileName', {
+                            params: {
+                                deptId: vm.deptId,
+                                clazzId: vm.clazzId
+                            }
+                        }).then(function (response) {
+                           filename += response.data;
+                           filename += vm.clockType;
+                            filename += "情况";
+                            link.setAttribute('download', filename + '.xls')
+                            document.body.appendChild(link)
+                            link.click()
+                            document.body.removeChild(link)
+                        })
+
+                }).catch(error => {
+                    console.log(error)
+                })
+            },
+            showDepts() {
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/manager/message/showDepts').then(response => (vm.depts = response.data));
+            },
+            showClazzs() {
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/manager/message/showClazzs?deptId=' + vm.deptId).then(response => (vm.clazzs = response.data));
+            },
+            pageQuery() {
+                var jsonDynamicTags = this.dynamicTags.toString();
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/manager/health/pageQuery', {
+                    params: {
+                        pageNum: this.currentPage1,
+                        pageSize: this.pageSize,
+                        clockTime: this.choseTime,
+                        clazzId: this.clazzId,
+                        deptId: this.deptId,
+                        clockType: this.clockType,
+                        flag: this.flag,
+                        dynamicTags: jsonDynamicTags
+                    }
+                }).then(function (response) {
+                    if (vm.clockType == '已打卡') {
+                        vm.totals = response.data.totals;
+                        vm.tableData = response.data.rows;
+                    } else if (vm.clockType == '未打卡') {
+                        vm.totals = response.data.totals;
+                        vm.tableData = response.data.rows;
+                    }
+                })
+            },
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                vm.pageQuery();
+                console.log(`当前页: ${val}`);
+            },
+            handleClose(tag) {
+                this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+                vm.pageQuery();
+            },
+
+            showInput() {
+                this.inputVisible = true;
+                this.$nextTick(_ => {
+                    this.$refs.saveTagInput.$refs.input.focus();
+                });
+            },
+
+            handleInputConfirm() {
+                let inputValue = this.inputValue.trim();
+                // || inputValue != '隔离中' || inputValue != '处于中高风险地区'  || inputValue != '不在校'
+                if (inputValue != '体温异常' && inputValue != '隔离中' && inputValue != '处于中高风险地区' && inputValue != '不在校') {
+
+                } else {
+                    Vue.prototype.$message({
+                        message: '添加标签成功！',
+                        type: 'success'
+                    });
+                    this.dynamicTags.push(inputValue);
+                    vm.pageQuery();
+                }
+                this.inputVisible = false;
+                this.inputValue = '';
+            }
+        },
+    })
+</script>
+</html>

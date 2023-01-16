@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cec.workbench.mapper.NoticeMapper">
+  <resultMap id="BaseResultMap" type="com.cec.workbench.pojo.Notice">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="from_name" jdbcType="VARCHAR" property="fromName" />
+    <result column="from_id" jdbcType="INTEGER" property="fromId" />
+    <result column="to_id" jdbcType="INTEGER" property="toId" />
+    <result column="send_time" jdbcType="TIMESTAMP" property="sendTime" />
+    <result column="content" jdbcType="VARCHAR" property="content" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="is_read" jdbcType="TINYINT" property="isRead" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_notice
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cec.workbench.pojo.Notice">
+    insert into t_notice (id, from_name, from_id, 
+      to_id, send_time, content, 
+      title, is_read)
+    values (null, #{fromName,jdbcType=VARCHAR}, #{fromId,jdbcType=INTEGER},
+      #{toId,jdbcType=INTEGER}, CURRENT_TIMESTAMP, #{content,jdbcType=VARCHAR},
+      #{title,jdbcType=VARCHAR}, 0)
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.cec.workbench.pojo.Notice">
+    update t_notice
+    set from_name = #{fromName,jdbcType=VARCHAR},
+      from_id = #{fromId,jdbcType=INTEGER},
+      to_id = #{toId,jdbcType=INTEGER},
+      send_time = #{sendTime,jdbcType=TIMESTAMP},
+      content = #{content,jdbcType=VARCHAR},
+      title = #{title,jdbcType=VARCHAR},
+      is_read = #{isRead,jdbcType=TINYINT}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id, from_name, from_id, to_id, send_time, content, title, is_read
+    from t_notice
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, from_name, from_id, to_id, send_time, content, title, is_read
+    from t_notice
+  </select>
+  <select id="selectByToId" resultType="notice">
+    select * from t_notice
+    where to_id=#{toId}
+    order by send_time desc
+  </select>
+  <select id="selectNotReadCountById" resultType="int">
+    select count(*) from t_notice where to_id=#{id} and is_read=0
+  </select>
+</mapper>

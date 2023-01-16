@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>records</title>
+    <script src="../../../../js/vue.min.js"></script>
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<style>
+    body {
+        background-color: #f9fafb;
+    }
+</style>
+<body>
+<div id="app">
+    <h1>审批出校记录</h1>
+    <br>
+    <div style="margin-left: 23%">
+        <!--        <span class="demonstration">日期：</span>-->
+        <el-date-picker
+                v-model="time"
+                type="date"
+                placeholder="选择日期"
+                @change="pageQuery()"
+                @clear="pageQuery()">
+        </el-date-picker>
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        <el-select v-model="value" clearable placeholder="选择审批状态" @change="pageQuery()" @clear="pageQuery()">
+            <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+            >
+            </el-option>
+        </el-select>
+    </div>
+    <br>
+    <template>
+
+        <el-table
+                :data="tableData"
+                stripe
+                style="width: 100%">
+            <!--            {{tableData[index].id}}-->
+            <el-table-column
+
+                    prop="creatTime"
+                    label="日期"
+                    width="180"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="studentId"
+                    label="学号"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="studentName"
+                    label="姓名"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="phoneNumber"
+                    label="电话号码"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="outRange"
+                    label="外出范围"
+                    align="center"
+                    width="250">
+            </el-table-column>
+            <el-table-column
+                    prop="reason"
+                    label="外出事由"
+                    align="center"
+                    width="200"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="outLocation"
+                    label="具体外出地点"
+                    align="center"
+                    width="200"
+            >
+            </el-table-column>
+
+            <el-table-column
+                    prop="duration"
+                    label="外出时长"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="permission"
+                    label="审批状态"
+                    width="150">
+                <template slot-scope="scope">
+                    <template v-if="scope.row.permission == '已通过' ">
+                        <font color="#228b22">{{scope.row.permission}}</font>
+                    </template>
+                    <template v-else-if="scope.row.permission == '已拒绝' ">
+                        <font color="red">{{scope.row.permission}}</font>
+                    </template>
+                    <template v-else-if="scope.row.permission == '待审批' ">
+                        <font color="#deb887">{{scope.row.permission}}</font>
+                    </template>
+                    <template v-else>
+                        <font>{{scope.row.permission}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    label="操作"
+                    width="160">
+                <template slot-scope="scope">
+                    <template v-if="scope.row.permission == '待审批' ">
+                        <el-button type="text" @click="temp(scope.row.id);dialogFormVisible = true">修改</el-button>
+                        <el-popconfirm
+                                title="确定撤回吗？"
+                                confirmButtonText="确定"
+                                cancelButtonText="取消"
+                                @Confirm="recall(scope.row.id)"
+                        >
+                            <el-button type="text" slot="reference">撤回</el-button>
+                        </el-popconfirm>
+                    </template>
+                    <template v-else-if="scope.row.permission == '已拒绝' ">
+                        <el-button type="text" @click="applicate(scope.row)">重新发布</el-button>
+                    </template>
+                    <template v-else-if="scope.row.permission == '已过期' ">
+                        <el-button type="text" @click="applicate(scope.row)">重新发布</el-button>
+                    </template>
+                    <template v-else>
+                        <el-button type="text" disabled>无</el-button>
+                    </template>
+                </template>
+            </el-table-column>
+            <!--            <v-if=></v-if>-->
+        </el-table>
+    </template>
+    <div style="margin-left: 33%">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page.sync="currentPage1"
+                :page-size="pageSize"
+                layout="total, prev, pager, next"
+                :total="totals">
+        </el-pagination>
+    </div>
+    <el-dialog title="离校申请表" :visible.sync="dialogFormVisible" :modal="false">
+        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="110px">
+            <el-row>
+                <el-col :span="24" style="">
+                    <el-form-item prop="date" label=" ">
+                        <template>
+                            <el-date-picker
+                                    size="large"
+                                    v-model="ruleForm.date"
+                                    type="daterange"
+                                    range-separator="至"
+                                    start-placeholder="开始日期"
+                                    end-placeholder="结束日期"
+                                    @blur="comparDate(ruleForm.date[0],ruleForm.date[1])"
+                            >
+                            </el-date-picker>
+                        </template>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="5.5" style="margin-left: 50px">
+                    <el-form-item prop="days" label="时长(天)">
+                        <el-input
+                                type="text"
+                                placeholder="请输入时长"
+                                v-model="ruleForm.days"
+                                disabled style="font-size: 15px">
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="9" style="margin-left: 50px">
+                    <el-form-item prop="outLocation" label="外出地点">
+                        <el-input
+                                type="text"
+                                placeholder="请输入内容"
+                                v-model="ruleForm.outLocation"
+                                show-word-limit>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12" style="margin-left: 50px">
+                    <el-form-item prop="place" label="外出范围">
+                        <template>
+                            <el-select v-model="ruleForm.place" placeholder="请选择">
+                                <el-option
+                                        v-for="item in ruleForm.places"
+                                        :key="item.place"
+                                        :label="item.label"
+                                        :value="item.place">
+                                </el-option>
+                            </el-select>
+                        </template>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="12" style="margin-left: 50px">
+                    <el-form-item prop="reason" label="外出事由">
+                        <el-input
+                                type="textarea"
+                                :rows="2"
+                                placeholder="请输入内容"
+                                v-model="ruleForm.reason">
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <br>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="cancel()">取 消</el-button>
+            <el-button type="primary" @click="submitForm('ruleForm')">确 定</el-button>
+        </div>
+    </el-dialog>
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                dialogTableVisible: false,
+                dialogFormVisible: false,
+                ruleForm: {
+                    places: [{
+                        place: '学校周边或桂林市六城区内',
+                        label: '学校周边或桂林市六城区内'
+                    }, {
+                        place: '大桂林内',
+                        label: '大桂林内'
+                    },{
+                        place: '广西区内',
+                        label: '广西区内'
+                    }, {
+                        place: '广西区外',
+                        label: '广西区外'
+                    }],
+                    outLocation: '',
+                    place: '',
+                    reason: '',
+                    date: '',
+                    days: '',
+                },
+                rules: {
+                    date: [
+                        {required: true, message: '请选择日期', trigger: 'change'}
+                    ],
+                    outLocation: [{
+                        required: true, message: '请输入内容', trigger: 'blur'
+                    }],
+                    place: [{
+                        required: true, message: '请输入外出地点', trigger: 'blur'
+                    }],
+                    reason: [{
+                        required: true, message: '请输入外出事由', trigger: 'blur'
+                    }],
+                    days: [{
+                        required: true, message: '请输入时长', trigger: 'blur'
+                    }],
+                },
+                tableData: [{
+                    id: null,
+                    studentId: null,
+                    studentName: null,
+                    phoneNumber: null,
+                    outRange: null,
+                    outLocation: null,
+                    reason: null,
+                    duration: null,
+                    permission: null,
+                    creatTime: null
+                }],
+                //当前页码
+                currentPage1: 1,
+                //每页条数
+                pageSize: 8,
+                //总条数
+                totals: 1000,
+                time: null,
+                options: [{
+                    value: '已通过',
+                    label: '已通过'
+                }, {
+                    value: '待审批',
+                    label: '待审批'
+                }, {
+                    value: '已拒绝',
+                    label: '已拒绝'
+                }, {
+                    value: '已过期',
+                    label: '已过期'
+                }],
+                value: null,
+                id: null
+            }
+        },
+        mounted() {
+            axios.post('http://127.0.0.1:8080/cec/pages/workbench/student/application/checkCreatTime');
+            axios.get('http://127.0.0.1:8080/cec/pages/workbench/student/application/pageQuery', {
+                params: {
+                    pageNum: this.currentPage1,
+                    pageSize: this.pageSize,
+                    permission: this.value,
+                    creatTime: this.time,
+                }
+            }).then(function (response) {
+                vm.totals = response.data.totals;
+                vm.tableData = response.data.rows;
+                console.log(response.data.rows);
+            })
+        },
+        methods: {
+            applicate(application) {
+                axios.post('http://127.0.0.1:8080/cec/pages/workbench/student/application/republish',{
+                    deptId: application.deptId,
+                    studentId: application.studentId,
+                    studentName: application.studentName,
+                    phoneNumber: application.phoneNumber,
+                    outRange: application.outRange,
+                    outLocation: application.outLocation,
+                    reason: application.reason,
+                    parentsName: application.parentsName,
+                    parentsNumber: application.parentsNumber
+                }).then(function () {
+                    window.location.href = "application.html";
+                });
+            },
+            pageQuery() {
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/student/application/pageQuery', {
+                    params: {
+                        pageNum: vm.currentPage1,
+                        pageSize: vm.pageSize,
+                        permission: vm.value,
+                        creatTime: vm.time,
+                    }
+                }).then(function (response) {
+                    vm.totals = response.data.totals;
+                    vm.tableData = response.data.rows;
+                    console.log(response.data.rows);
+                })
+            },
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                this.pageQuery();
+            },
+            recall(id) {
+                axios.post('http://127.0.0.1:8080/cec/pages/workbench/student/application/recall', {
+                    id: id
+                }).then(function (response) {
+                    var success = response.data;
+                    if (success == "1") {
+                        Vue.prototype.$message({
+                            message: '撤回成功！',
+                            type: 'success'
+                        });
+                        vm.pageQuery();
+                    } else if (success == "0") {
+                        Vue.prototype.$message({
+                            message: '撤回失败！',
+                            type: 'error'
+                        });
+                    }
+                })
+            },
+            comparDate(dateValue1, dateValue2) {
+                // return new Date().getTime() >= new Date(dateValue).getTime() + 3600 * 1000 * 24;
+                if (new Date().getTime() > new Date(dateValue1).getTime() + 3600 * 1000 * 24) {
+                    Vue.prototype.$message({
+                        message: '开始时间必须大于现在时间',
+                        type: 'error'
+                    });
+                    this.ruleForm.date = '';
+                } else {
+                    this.ruleForm.days = Math.ceil(((new Date(dateValue2).getTime() + 3600 * 1000 * 24) - (new Date(dateValue1).getTime() + 3600 * 1000 * 24)) / (3600 * 1000 * 24)) + 1;
+                }
+            },
+            temp(id){
+                this.id = id;
+            },
+            modify(){
+                axios.post('http://127.0.0.1:8080/cec/pages/workbench/student/application/modify',{
+                        id: vm.id,
+                        outLocation: vm.ruleForm.outLocation,
+                        outRange: vm.ruleForm.place,
+                        reason: vm.ruleForm.reason,
+                        startTime: vm.ruleForm.date[0],
+                        endTime: vm.ruleForm.date[1],
+                        duration: vm.ruleForm.days,
+
+                }).then(function (response) {
+                        var success = response.data;
+                        vm.$refs.ruleForm.resetFields();
+                        if (success == "1") {
+                            Vue.prototype.$message({
+                                message: '修改成功！',
+                                type: 'success'
+                            });
+                            vm.pageQuery();
+                        } else if (success == "0") {
+                            Vue.prototype.$message({
+                                message: '修改失败！',
+                                type: 'error'
+                            });
+                        }
+                    })
+            },
+            cancel(){
+                this.dialogFormVisible = false;
+                vm.$refs.ruleForm.resetFields();
+            }
+            ,
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        vm.modify();
+                        this.dialogFormVisible = false
+                    } else {
+                        return false;
+                    }
+                });
+            },
+
+        },
+
+
+    })
+</script>
+</html>

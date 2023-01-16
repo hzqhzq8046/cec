@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人信息</title>
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <script src="../../../../js/flexible.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            display: table;
+            content: "";
+        }
+        .clearfix:after {
+            clear: both
+        }
+
+        .box-card1{
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .box-card2{
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        .el-button{
+            margin-left: 15px;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>&nbsp;&nbsp;个人资料</h1>
+    <el-card class="box-card1">
+        <div slot="header" class="clearfix">
+            <span style="font-size: 18px">基本信息</span>
+        </div>
+        <span style="padding-left: 40px">
+            <el-avatar :size="80" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+        </span>
+        <span class="car-body" style=" margin-left: 20px; font-size: 23px;">{{name}}</span>
+        <el-popover
+                placement="top"
+                width="300"
+                title="修改姓名"
+                v-model="visible8">
+            <el-input type="text" placeholder="请输入姓名" v-model="tempName" clearable></el-input>
+            <div style="text-align: right; margin: 10px">
+                <el-button size="mini" type="text" @click="visible8 = false">取消</el-button>
+                <el-button size="mini" type="primary" v-on:click="editPersonal">保存</el-button>
+            </div>
+            <el-button slot="reference" type="text" icon="el-icon-edit" class="aaa"></el-button>
+
+        </el-popover>
+        <div style="padding-left: 45px; font-size: 18px;margin-top: 10px;color: #858585">工号<span style="margin-left: 20px;color: #000">{{id}}</span><span style="margin-left: 100px">所属院系<span style="margin-left: 20px;color: #000">{{dept.name}}</span></span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="班级"
+                    v-model="visible7">
+                <el-form :inline="true">
+                    <el-form-item label="选择院系">
+                        <el-select
+                                v-model="tempDept"
+                                placeholder="请选择院系"
+                                value-key="id"
+                                clearable
+                        >
+                            <el-option
+                                    v-for="x in deptOption"
+                                    :key="x.id"
+                                    :value="x"
+                                    :label="x.name"
+                            ></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible7 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="editPersonal">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+    </el-card>
+
+    <el-card class="box-card2">
+        <div slot="header" class="clearfix">
+            <span style="font-size: 18px;">详细资料</span>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 10px;color: #858585"><span>手机号</span><span style="margin-left: 20px; color: black">{{phoneNumber}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="修改手机号"
+                    v-model="visible2">
+                <el-input type="text" placeholder="请输入手机号" v-model="tempPhoneNumber" maxlength="11" show-word-limit clearable>
+                </el-input>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible2 = false">取消</el-button>
+                    <el-button size="mini" type="primary" v-on:click="editPersonal">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 10px;color: #858585"><span>民族</span><span style="margin-left: 38px; color: black">{{origin}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="民族"
+                    v-model="visible6">
+                <el-input type="text" placeholder="民族" v-model="tempOrigin" show-word-limit></el-input>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible6 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="editPersonal">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 10px;color: #858585"><span>性别</span><span style="margin-left: 38px; color: black">{{sex}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="性别"
+                    v-model="visible3">
+                <template>
+                    <el-radio v-model="tempSex" label="男">男</el-radio>
+                    <el-radio v-model="tempSex" label="女">女</el-radio>
+                </template>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible3 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="editPersonal">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 10px;color: #858585"><span>生日</span><span style="margin-left: 38px; color: black">{{birth}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="修改生日"
+                    v-model="visible4">
+                <div class="block">
+                    <span class="demonstration">默认</span>
+                    <el-date-picker
+                            v-model="tempBirth"
+                            type="date"
+                            placeholder="选择日期"
+                            value-format="yyyy-MM-dd"
+                            :picker-options="pickerOptions">
+                    </el-date-picker>
+                </div>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible4 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="editPersonal">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 10px;color: #858585"><span>年龄</span><span style="margin-left: 38px; color: black">{{age}}</span></div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>籍贯</span><span style="margin-left: 38px; color: black">{{address}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="修改籍贯"
+                    v-model="visible5">
+                <el-input type="text" placeholder="请输入内容" v-model="tempAddress"show-word-limit></el-input>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible5 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="editPersonal">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+    </el-card>
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        mounted(){
+            axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/counsellor/personal',
+            ).then(function (resp) {
+                vm.id = resp.data.id;
+                vm.name = resp.data.name;
+                vm.dept.id = resp.data.deptId;
+                vm.phoneNumber = resp.data.phoneNumber;
+                vm.origin = resp.data.orign;
+                vm.sex = resp.data.sex;
+                vm.birth = resp.data.birth;
+                vm.tempBirth = vm.birth;
+                vm.age = resp.data.age;
+                vm.address = resp.data.address;
+                vm.loginPwd = resp.data.loginPwd;
+                vm.loginName = resp.data.loginName;
+
+                vm.tempId = vm.id;
+                vm.tempName = vm.name;
+                vm.tempDept.id = vm.dept.id;
+                vm.tempPhoneNumber = vm.phoneNumber;
+                vm.tempOrigin = vm.origin;
+                vm.tempSex = vm.sex;
+                vm.tempAge = vm.age;
+                vm.tempAddress = vm.address;
+                axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/counsellor/personalIncludeDeptName',
+                    {
+                        id: vm.id,
+                    }
+                ).then(function (resp) {
+                    vm.dept.name = resp.data.deptName;
+                })
+            })
+            axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/counsellor/selectDept'
+            ).then(function (resp) {
+                vm.deptOption = resp.data;
+            })
+        },
+        data() {
+            return {
+                name: '',
+                id: 0,
+                deptId: '',
+                phoneNumber: '',
+                loginPwd: '',
+                loginName: '',
+                origin: '',
+                sex: '',
+                birth: '',
+                tempBirth: '',
+                age: 0,
+                address: '',
+                tempName : '',
+                tempDeptName : '',
+                tempDeptId : '',
+                tempPhoneNumber : '',
+                tempOrigin : '',
+                tempSex : '',
+                tempAge : '',
+                tempAddress : '',
+                visible2: false,
+                visible3: false,
+                visible4: false,
+                visible5: false,
+                visible6: false,
+                visible7: false,
+                visible8: false,
+                deptOption: [{
+                    id: null,
+                    name: null,
+                }],
+                dept:{
+                    id: '',
+                    name: ''
+                },
+                tempDept:{
+                },
+                pickerOptions: {
+                    disabledDate(time) {
+                        return time.getTime() > Date.now();
+                    }
+                }
+            }
+        },
+        methods: {
+            handleOpen(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            handleClose(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            editPersonal() {
+                var pName ;
+                var pDeptName;
+                var pDeptId;
+                var pPhoneNumber;
+                var pOrigin;
+                var pSex;
+                var pAddress;
+                var pBirth = '';
+                var pAge;
+                if(vm.birth != null){
+                    vm.age = Math.ceil(((new Date().getTime() + 3600 * 1000 * 24) - (new Date(vm.birth).getTime() + 3600 * 1000 * 24)) / (3600 * 1000 * 24 * 365)) - 1;
+                    if(vm.age < 0)
+                        vm.age = 0;
+                }
+                if(vm.tempBirth != null){
+                    vm.tempAge = Math.ceil(((new Date().getTime() + 3600 * 1000 * 24) - (new Date(vm.tempBirth).getTime() + 3600 * 1000 * 24)) / (3600 * 1000 * 24 * 365)) - 1;
+                    if(vm.tempAge < 0)
+                        vm.tempAge = 0;
+                }
+                if(vm.tempName != '')
+                    pName = vm.tempName;
+                else
+                    pName = vm.name;
+                if(vm.tempDept.id == null || vm.tempDept.id == '' || vm.tempDept.name == null || vm.tempDept.name == '') {
+                    pDeptId = vm.dept.id;
+                    pDeptName = vm.dept.name;
+                }
+                else {
+                    pDeptId = vm.tempDept.id;
+                    pDeptName = vm.tempDept.name;
+                }
+                if(vm.tempPhoneNumber != '')
+                    pPhoneNumber = vm.tempPhoneNumber;
+                else
+                    pPhoneNumber = vm.phoneNumber;
+                if(vm.tempOrigin != '')
+                    pOrigin = vm.tempOrigin;
+                else
+                    pOrigin = vm.origin;
+                if(vm.tempSex != '')
+                    pSex = vm.tempSex;
+                else
+                    pSex = vm.sex;
+                if(vm.tempAddress != '')
+                    pAddress = vm.tempAddress;
+                else
+                    pAddress = vm.address;
+                if(vm.tempBirth != null)
+                    pBirth = vm.tempBirth;
+                else
+                    pBirth = vm.birth;
+                if(vm.tempAge != '')
+                    pAge = vm.tempAge;
+                else
+                    pAge = vm.age;
+                axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/counsellor/editPersonal',
+                    {
+                        id : vm.id,
+                        name : pName,
+                        deptId : pDeptId,
+                        phoneNumber : pPhoneNumber,
+                        orign : pOrigin,
+                        sex : pSex,
+                        birth : pBirth,
+                        age : pAge,
+                        address : pAddress,
+                        loginPwd : vm.loginPwd,
+                        loginName: vm.loginName,
+                    }
+                ).then(function (resp) {
+                    if(resp.data != null) {
+                        vm.id = resp.data.id;
+                        vm.name = resp.data.name;
+                        vm.dept.name = resp.data.deptName;
+                        vm.dept.id = resp.data.deptId;
+                        vm.phoneNumber = resp.data.phoneNumber;
+                        vm.origin = resp.data.orgin;
+                        vm.sex = resp.data.sex;
+                        vm.birth = vm.dateFormat(resp.data.birth);
+                        vm.tempBirth = vm.birth;
+                        vm.age = resp.data.age;
+                        vm.address = resp.data.address;
+                        vm.loginPwd = resp.data.loginPwd;
+                        vm.loginName = resp.data.loginName;
+                        vm.visible2 = false;
+                        vm.visible3 = false;
+                        vm.visible4 = false;
+                        vm.visible5 = false;
+                        vm.visible6 = false;
+                        vm.visible7 = false;
+                        vm.visible8 = false;
+                        window.parent.vm.modifyName();
+                    }
+                })
+            },
+            dateFormat(longTypeDate) {
+                var dateType = "";
+                var date = new Date();
+                date.setTime(longTypeDate);
+                dateType += date.getFullYear();   //年
+                dateType += "-" + vm.getMonth(date); //月
+                dateType += "-" + vm.getDay(date);   //日
+                return dateType;
+            },
+            getMonth(date){
+                var month = "";
+                month = date.getMonth() + 1; //getMonth()得到的月份是0-11
+                if(month<10){
+                    month = "0" + month;
+                }
+                return month;
+            },
+            getDay(date){
+                var day = "";
+                day = date.getDate();
+                if(day<10){
+                    day = "0" + day;
+                }
+                return day;
+            },
+            // change(val) {
+            //     if(val) {
+            //         axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/student/selectClazz',
+            //             {
+            //                 id: vm.deptId,
+            //             }
+            //         ).then(function (resp) {
+            //             vm.clazzOption = resp.data;
+            //             // vm.tempClazz = vm.clazzOption[0];
+            //         })
+            //     } else {
+            //         vm.tempClazz = null;
+            //     }
+            // },
+        }
+    });
+</script>
+</html>

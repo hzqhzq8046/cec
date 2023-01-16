@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>records</title>
+    <script src="../../../../js/vue.min.js"></script>
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>审批出校记录</h1>
+    <br>
+    <el-row>
+        <el-col :span="4">
+            <el-date-picker
+                    v-model="time"
+                    type="date"
+                    @change="pageQuery()"
+                    placeholder="选择日期">
+            </el-date-picker>
+        </el-col>
+        <el-col :span="5">
+            <el-select v-model="clazzId" clearable placeholder="选择班级"
+                       @visible-change="showClazzs()" @change="pageQuery()" @clear="pageQuery()">
+                <el-option
+                        v-for="item in clazzs"
+                        :key="item.id"
+                        :label="item.name"
+                        :value="item.id">
+                </el-option>
+            </el-select>
+        </el-col>
+    </el-row>
+    <br>
+    <template>
+
+        <el-table
+                :data="tableData"
+                stripe
+                style="width: 100%;">
+            <!--            {{tableData[index].id}}-->
+            <el-table-column
+
+                    prop="creatTime"
+                    label="日期"
+
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="studentId"
+                    label="学号"
+
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="studentName"
+                    label="姓名"
+
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="reason"
+                    label="外出事由"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="outLocation"
+                    label="具体外出地点"
+                    width="220"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="duration"
+                    label="外出时长"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    label="操作"
+
+                    align="center">
+                <template slot-scope="scope">
+                    <el-popconfirm
+                            title="确定同意吗？"
+                            confirmButtonText="确定"
+                            cancelButtonText="取消"
+                            @Confirm="acceptApplication(scope.row.id)"
+                    >
+                    <el-button type="text" slot="reference" >同意</el-button>
+                    </el-popconfirm>
+                    <el-popconfirm
+                            title="确定撤回吗？"
+                            confirmButtonText="确定"
+                            cancelButtonText="取消"
+                            @Confirm="refuseApplication(scope.row.id)"
+                    >
+                    <el-button type="text" slot="reference">撤回</el-button>
+                    </el-popconfirm>
+                    <el-button type="text" @click="temp(scope.row);dialogFormVisible = true">详情</el-button>
+                </template>
+            </el-table-column>
+
+            <!--            <v-if=></v-if>-->
+        </el-table>
+    </template>
+    <div style="margin-left: 33%">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page.sync="currentPage1"
+                :page-size="pageSize"
+                layout="total, prev, pager, next"
+                :total="totals">
+        </el-pagination>
+    </div>
+    <el-dialog title="详情" :visible.sync="dialogFormVisible" :modal="false">
+        日期：{{temp1.creatTime}}<br><br>
+        学号：{{temp1.studentId}}&nbsp;&nbsp;&nbsp;
+        姓名：{{temp1.studentName}}&nbsp;&nbsp;&nbsp;
+        性别：{{temp1.sex}} <br><br>
+        电话号码：{{temp1.phoneNumber}}&nbsp;&nbsp;&nbsp;
+        外出范围：{{temp1.outRange}} &nbsp;&nbsp;&nbsp;
+        具体外出地点：{{temp1.outLocation}}<br><br>
+        外出事由：{{temp1.reason}}&nbsp;&nbsp;&nbsp;
+        开始时间：{{temp1.startTime}}&nbsp;&nbsp;&nbsp;
+        结束时间：{{temp1.endTime}}<br><br>
+        家长姓名：{{temp1.parentsName}}&nbsp;&nbsp;&nbsp;
+        家长电话：{{temp1.parentsNumber}}
+    </el-dialog>
+
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                tableData: [{
+                } ],
+                clazzs: [{}],
+                clazzId: '',
+                //当前页码
+                currentPage1: 1,
+                //每页条数
+                pageSize: 8,
+                //总条数
+                totals: 1000,
+                time: '',
+                temp1:{},
+                dialogFormVisible: false
+            }
+        },
+        mounted(){
+            axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/checkCreatTime')
+            axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/pageQuery', {
+                params: {
+                    pageNum: this.currentPage1,
+                    pageSize: this.pageSize,
+                    time: this.time,
+                    clazzId: this.clazzId,
+                }
+            }).then(function (response) {
+                vm.totals = response.data.totals;
+                vm.tableData = response.data.rows;
+            })
+        }
+        ,
+        methods: {
+            temp(temp1){
+                this.temp1 = temp1;
+            }
+            ,
+            acceptApplication(id){
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/acceptApplication?id='+id+'&permission='+'已通过').then(function (response) {
+                    var success = response.data;
+                    if (success == "1"){
+                        Vue.prototype.$message({
+                            message: '审批通过！',
+                            type: 'success'
+                        });
+                    }else if (success == "0"){
+                        Vue.prototype.$message({
+                            message: '审批失败！',
+                            type: 'error'
+                        });
+                    }
+                    vm.pageQuery();
+                })
+            },
+            refuseApplication(id){
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/refuseApplication?id='+id+'&permission='+'已拒绝').then(function (response) {
+                    var success = response.data;
+                    if (success == "1"){
+                        Vue.prototype.$message({
+                            message: '撤回成功！',
+                            type: 'success'
+                        });
+                    }else if (success == "0"){
+                        Vue.prototype.$message({
+                            message: '撤回失败！',
+                            type: 'error'
+                        });
+                    }
+                    vm.pageQuery();
+                })
+            },
+            pageQuery(){
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/pageQuery', {
+                    params: {
+                        pageNum: this.currentPage1,
+                        pageSize: this.pageSize,
+                        time: this.time,
+                        clazzId: this.clazzId,
+                    }
+                }).then(function (response) {
+                    vm.totals = response.data.totals;
+                    vm.tableData = response.data.rows;
+                })
+            },
+            showClazzs() {
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/showClazzs').then(response => (vm.clazzs = response.data));
+            },
+            handleSizeChange(val) {
+
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                this.pageQuery();
+                console.log(`当前页: ${val}`);
+            }
+        },
+    })
+</script>
+</html>

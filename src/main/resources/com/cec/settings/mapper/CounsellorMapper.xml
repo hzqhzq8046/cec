@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cec.settings.mapper.CounsellorMapper">
+  <resultMap id="BaseResultMap" type="com.cec.settings.pojo.Counsellor">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="login_name" jdbcType="VARCHAR" property="loginName" />
+    <result column="login_pwd" jdbcType="VARCHAR" property="loginPwd" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="dept_id" jdbcType="VARCHAR" property="deptId" />
+    <result column="birth" jdbcType="DATE" property="birth" />
+    <result column="age" jdbcType="INTEGER" property="age" />
+    <result column="orign" jdbcType="VARCHAR" property="orign" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="phone_number" jdbcType="VARCHAR" property="phoneNumber" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_counsellor
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cec.settings.pojo.Counsellor">
+    insert into t_counsellor (id, login_name, login_pwd, 
+      name, sex, dept_id, 
+      birth, age, orign, address, 
+      phone_number)
+    values (#{id,jdbcType=INTEGER}, #{loginName,jdbcType=VARCHAR}, #{loginPwd,jdbcType=VARCHAR}, 
+      #{name,jdbcType=VARCHAR}, #{sex,jdbcType=VARCHAR}, #{deptId,jdbcType=VARCHAR}, 
+      #{birth,jdbcType=DATE}, #{age,jdbcType=INTEGER}, #{orign,jdbcType=VARCHAR}, #{address,jdbcType=VARCHAR}, 
+      #{phoneNumber,jdbcType=VARCHAR})
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.cec.settings.pojo.Counsellor">
+    update t_counsellor
+    set login_name = #{loginName,jdbcType=VARCHAR},
+      login_pwd = #{loginPwd,jdbcType=VARCHAR},
+      name = #{name,jdbcType=VARCHAR},
+      sex = #{sex,jdbcType=VARCHAR},
+      dept_id = #{deptId,jdbcType=VARCHAR},
+      birth = #{birth,jdbcType=DATE},
+      age = #{age,jdbcType=INTEGER},
+      orign = #{orign,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      phone_number = #{phoneNumber,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id, login_name, login_pwd, name, sex, dept_id, birth, age, orign, address, 
+    phone_number
+    from t_counsellor
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, login_name, login_pwd, name, sex, dept_id, birth, age, orign, address, 
+    phone_number
+    from t_counsellor
+  </select>
+  <select id="selectByLoginNameAndLoginPassword" resultType="counsellor">
+    select * from t_counsellor where login_name=#{loginName} and login_pwd=#{loginPassword}
+  </select>
+  <select id="selectByLoginName" resultType="counsellor">
+    select * from t_counsellor where login_name=#{loginName}
+  </select>
+  <select id="selectClazzById" resultType="clazz">
+    select t_clazz.id,t_clazz.name,t_clazz.counsellor_id,t_clazz.dept_id
+    from t_counsellor,t_clazz
+    where
+      t_counsellor.id = #{id} and t_clazz.counsellor_id = t_counsellor.id;
+  </select>
+  <select id="selectPageByDeptIdAndStaffId" resultType="Map">
+    select s1.id,s1.name,s2.name AS deptName,s1.sex,s1.birth,s1.age,s1.orign AS origin,s1.address,s1.phone_number AS phoneNumber
+    from t_counsellor s1,
+        t_dept s2
+    <where>
+      s1.dept_id = s2.id
+      <if test="deptId != null and deptId != ''">
+        AND s1.dept_id = #{deptId}
+      </if>
+      <if test="staffId != null and staffId != ''">
+        AND s1.id = #{staffId}
+      </if>
+    </where>
+  </select>
+  <select id="selectCountByDeptIdAndStaffId" resultType="Integer">
+    select COUNT(*)
+    from t_counsellor
+    <where>
+      <if test="deptId != null and deptId != ''">
+        AND dept_id = #{deptId}
+      </if>
+      <if test="staffId != null and staffId != ''">
+        AND id = #{staffId}
+      </if>
+    </where>
+
+  </select>
+  <select id="selectIncludeDeptNameByPrimaryKey" resultType="map">
+    select c.id as id, login_name as loginName, login_pwd as loginPwd, c.name as name, sex as sex, c.dept_id as deptId, d.name as deptName, birth as birth, age as age, orign as orgin, address as address,
+           phone_number as phoneNumber
+    from t_counsellor c,t_dept d
+    where c.id = #{id,jdbcType=INTEGER} and c.dept_id = d.id
+  </select>
+  <select id="selectIds" resultType="int">
+    select id from t_counsellor
+  </select>
+</mapper>

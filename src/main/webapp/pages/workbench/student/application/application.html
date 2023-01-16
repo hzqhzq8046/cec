@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../../../../js/vue.min.js"></script>
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+
+        .el-row {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .el-col {
+            border-radius: 4px;
+        }
+
+        .grid-content {
+            border-radius: 4px;
+            min-height: 70px;
+        }
+
+        .row-bg {
+            padding: 10px 0;
+
+        }
+
+        .is-selected {
+            color: #1989FA;
+        }
+
+        .right {
+            position: absolute;
+            /*right: 10px;*/
+            left: 900px;
+            top: 20px;
+            width: 1200px;
+            height: 600px;
+        }
+
+        .left {
+            top: 40px;
+            margin-left: 70px;
+            position: relative;
+            /*background: #000;*/
+            width: 90%;
+
+        }
+
+        .el-form-item__label {
+            font-size: 17px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>&nbsp;&nbsp;审批出校</h1>
+    <div class="left">
+        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="110px">
+            <el-row>
+                <el-col :span="5">
+                    <el-form-item prop="dept" label="学院名称">
+                        <template>
+                            <el-select v-model="ruleForm.dept" placeholder="请选择" >
+                                <el-option
+                                        v-for="item in ruleForm.depts"
+                                        :key="item.id"
+                                        :label="item.name"
+                                        :value="item.id"
+                                >
+                                </el-option>
+                            </el-select>
+                        </template>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="7" style="left: 650px">
+                    <el-form-item prop="time" label=" ">
+                        <template>
+                            <el-date-picker
+                                    size="large"
+                                    v-model="ruleForm.time"
+                                    type="daterange"
+                                    range-separator="至"
+                                    start-placeholder="开始日期"
+                                    end-placeholder="结束日期"
+                                    @blur="comparDate(ruleForm.time[0],ruleForm.time[1])"
+                            >
+                            </el-date-picker>
+                        </template>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="5.5">
+                    <template>
+                        <el-form-item prop="studentId" label="学号">
+                            <el-input
+                                    type="text"
+                                    placeholder="请输入学号"
+                                    v-model="ruleForm.studentId"
+                                    maxlength="5"
+                                    show-word-limit>
+                            </el-input>
+                        </el-form-item>
+                    </template>
+                </el-col>
+                <el-col :span="5.5" style="margin-left: 60px">
+                    <el-form-item prop="days" label="时长(天)">
+                        <el-input
+                                type="text"
+                                placeholder="请输入时长"
+                                v-model="ruleForm.days"
+                                disabled style="font-size: 15px">
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="5">
+                    <el-form-item prop="" label="校区名称">
+                        <template>
+                            <el-select disabled placeholder="雁山校区">
+                            </el-select>
+                        </template>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="5" style="margin-left: 65px">
+                    <el-form-item prop="parentName" label="家长姓名">
+                        <el-input
+                                type="text"
+                                placeholder="请输入"
+                                v-model="ruleForm.parentName"
+                        >
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="6">
+                    <el-form-item prop="" label="学生类型">
+                        <template>
+                            <el-select disabled placeholder="本科生">
+                            </el-select>
+                        </template>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="6" style="margin-left: 4px">
+                    <el-form-item prop="parentNum" label="家长电话">
+                        <el-input
+                                type="text"
+                                placeholder="请输入数字"
+                                v-model="ruleForm.parentNum"
+                                maxlength="11"
+                                show-word-limit>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="6" style="margin-right: 10px">
+                    <el-form-item prop="outLocation" label="外出地点">
+                        <el-input
+                                type="text"
+                                placeholder="请输入内容"
+                                v-model="ruleForm.outLocation"
+                                show-word-limit>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12" style="margin-right: 10px ">
+                    <el-form-item prop="place" label="外出范围">
+                        <template>
+                            <el-select v-model="ruleForm.place" placeholder="请选择">
+                                <el-option
+                                        v-for="item in ruleForm.places"
+                                        :key="item.place"
+                                        :label="item.label"
+                                        :value="item.place">
+                                </el-option>
+                            </el-select>
+                        </template>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="6">
+                    <el-form-item prop="phoneNum" label="手机号码">
+                        <el-input
+                                type="text"
+                                placeholder="请输入数字"
+                                v-model="ruleForm.phoneNum"
+                                maxlength="11"
+                                show-word-limit>
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="6" style=" ">
+                    <el-form-item prop="reason" label="外出事由">
+                        <el-input
+                                type="textarea"
+                                :rows="2"
+                                placeholder="请输入内容"
+                                v-model="ruleForm.reason">
+                        </el-input>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+            <br>
+            <el-form-item style="margin-left: 180px">
+                <el-button type="primary" @click="submitForm('ruleForm');">提交</el-button>
+                <el-dialog
+                        title="提示"
+                        :visible.sync="dialogVisible"
+                        width="30%"
+                        :modal="false"
+                        >
+                    <span>是否提交？</span>
+                    <span slot="footer" class="dialog-footer">
+                    <el-button @click="dialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="dialogVisible = false;vm.applicate()">确 定</el-button>
+                </span>
+                </el-dialog>
+            </el-form-item>
+        </el-form>
+    </div>
+    <div class="right">
+        <el-col :span="10">
+            <el-calendar>
+                <!-- 这里使用的是 2.5 slot 语法，对于新项目请使用 2.6 slot 语法-->
+                <template
+                        slot="dateCell"
+                        slot-scope="{date, data}">
+                    <p :class="data.isSelected ? 'is-selected' : ''">
+                        {{ data.day.split('-').slice(1).join('-') }}
+                        {{ data.isSelected ? '✔️' : ''}}
+                    </p>
+                </template>
+            </el-calendar>
+        </el-col>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                dialogVisible: false,
+                ruleForm: {
+                    depts: [{}],
+                    places: [{
+                        place: '学校周边或桂林市六城区内',
+                        label: '学校周边或桂林市六城区内'
+                    }, {
+                        place: '大桂林内',
+                        label: '大桂林内'
+                    }, {
+                        place: '广西区内',
+                        label: '广西区内'
+                    }, {
+                            place: '广西区外',
+                            label: '广西区外'
+                    }],
+                    dept: '',
+                    studentId: '',
+                    sex: '',
+                    phoneNum: '',
+                    outLocation: '',
+                    place: '',
+                    reason: '',
+                    time: '',
+                    days: '',
+                    parentName: '',
+                    parentNum: '',
+
+                },
+                rules: {
+                    dept: [
+                        {required: true, message: '请选择学院名称', trigger: 'change'},
+
+                    ],
+                    time: [
+                        {required: true, message: '请选择日期', trigger: 'change'}
+                    ],
+                    studentId: [{
+                        required: true,
+                        digits: true, message: '请输入学号', trigger: 'blur'
+                    },
+                        {min: 5, max: 5, message: '长度为5个数字', trigger: 'blur'}],
+                    outLocation: [{
+                        required: true, message: '请输入内容', trigger: 'blur'
+                    }],
+                    phoneNum: [{
+                        digits: true,
+                        required: true, message: '请输入手机号码', trigger: 'blur'
+                    },
+                        {min: 11, max: 11, message: '长度为11个数字', trigger: 'blur'}],
+                    place: [{
+                        required: true, message: '请输入外出地点', trigger: 'blur'
+                    }],
+                    reason: [{
+                        required: true, message: '请输入外出事由', trigger: 'blur'
+                    }],
+                    days: [{
+                        required: true, message: '请输入时长', trigger: 'blur'
+                    }],
+                    parentName: [{
+                        required: true, message: '请输入家长姓名   ', trigger: 'blur'
+                    }],
+                    parentNum: [{
+                        digits: true,
+                        required: true, message: '请输入手机号码', trigger: 'blur'
+                    },
+                        {min: 11, max: 11, message: '长度为11个数字', trigger: 'blur'}],
+                }
+            };
+        },
+        mounted(){
+            axios.get('http://127.0.0.1:8080/cec/pages/workbench/student/application/showDepts').then(function (response) {
+                vm.ruleForm.depts = response.data;
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/student/application/queryApplication').then(function (response) {
+                    var application = response.data;
+                    if (application != null && application != ''){
+                        vm.ruleForm.dept = application.deptId;
+                        vm.ruleForm.studentId = application.studentId;
+                        vm.ruleForm.outLocation = application.outLocation;
+                        vm.ruleForm.phoneNum = application.phoneNumber;
+                        vm.ruleForm.parentName = application.parentsName;
+                        vm.ruleForm.parentNum =  application.parentsNumber;
+                        vm.ruleForm.place = application.outRange;
+                        vm.ruleForm.reason = application.reason;
+                    }
+                });
+            });
+
+        }
+        ,
+        methods: {
+            applicate() {
+                // axios.get('http://127.0.0.1:8080/cec/pages/workbench/student/application/applicate',
+                //     {
+                //         deptId: vm.ruleForm.dept,
+                //         studentId: vm.ruleForm.studentId,
+                //         phoneNumber: vm.ruleForm.phoneNum,
+                //         outRange: vm.ruleForm.place,
+                //         outLocation: vm.ruleForm.outLocation,
+                //         reason: vm.ruleForm.reason,
+                //         // startTime: vm.ruleForm.time[0],
+                //         // endTime: vm.ruleForm.time[1],
+                //         duration: vm.ruleForm.days,
+                //         parentsName: vm.ruleForm.parentName,
+                //         parentsNumber: vm.ruleForm.parentNum,
+                //     }
+                // );
+                axios({
+                    method: "post",
+                    url: "http://127.0.0.1:8080/cec/pages/workbench/student/application/applicate",
+                    data: {
+                        deptId: vm.ruleForm.dept,
+                        studentId: vm.ruleForm.studentId,
+                        phoneNumber: vm.ruleForm.phoneNum,
+                        outRange: vm.ruleForm.place,
+                        outLocation: vm.ruleForm.outLocation,
+                        reason: vm.ruleForm.reason,
+                        startTime: vm.ruleForm.time[0],
+                        endTime: vm.ruleForm.time[1],
+                        duration: vm.ruleForm.days,
+                        parentsName: vm.ruleForm.parentName,
+                        parentsNumber: vm.ruleForm.parentNum,
+                    }
+                }).then(function (response) {
+                    vm.$refs.ruleForm.resetFields();
+                    var success = response.data;
+                    if (success == "1") {
+                        Vue.prototype.$message({
+                            message: '提交成功！',
+                            type: 'success'
+                        });
+                    } else if (success == "0") {
+                        Vue.prototype.$message({
+                            message: '提交失败！',
+                            type: 'error'
+                        });
+                    }
+                });
+            },
+            comparDate(dateValue1, dateValue2) {
+                // return new Date().getTime() >= new Date(dateValue).getTime() + 3600 * 1000 * 24;
+                if (new Date().getTime() > new Date(dateValue1).getTime() + 3600 * 1000 * 24) {
+                    Vue.prototype.$message({
+                        message: '开始时间必须大于现在时间',
+                        type: 'error'
+                    });
+                    this.ruleForm.time = '';
+                } else {
+                    this.ruleForm.days = Math.ceil(((new Date(dateValue2).getTime() + 3600 * 1000 * 24) - (new Date(dateValue1).getTime() + 3600 * 1000 * 24)) / (3600 * 1000 * 24)) + 1;
+                }
+            },
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        vm.dialogVisible = true;
+                    } else {
+                        return false;
+                    }
+                });
+            }
+        }
+
+    })
+</script>
+</html>

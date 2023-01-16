@@ -1,0 +1,190 @@
+body {
+    overflow-y: hidden;
+}
+.el-aside {
+    background-image: url("../img/login.jpg");
+    position: fixed;
+    background-repeat: repeat-y;
+    background-size:100% 100%;
+    color: #333;
+    text-align: center;
+    line-height: 200px;
+    height: 90vh;
+}
+
+.el-main {
+    margin-left: 720px;
+    /*background-color: #f9fafb;*/
+    background-color: #FFFFFF;
+    color: #333;
+    text-align: center;
+    /*line-height: 60px;*/
+    height: 100vh;
+}
+
+body > .el-container {
+    margin-bottom: 40px;
+}
+
+.box-card {
+    margin-top: 11%;
+    margin-left: 20%;
+    width: 480px;
+    height: 600px;
+    border-radius: 8px;
+}
+
+.el-card .logo {
+    margin-top: 30px;
+    margin-left: 190px;
+    width: 60px;
+    height: 60px;
+    background-image: url("../img/logal.png");
+    position: fixed;
+    background-repeat: repeat-y;
+    background-size:100% 100%;
+}
+
+.el-card .el-login {
+
+    height: 80px;
+    width: 200px;
+    /*background-color: aqua;*/
+    margin-top: 100px;
+    margin-bottom: 30px;
+    margin-left: 120px;
+    font-size: 30px;
+    font-weight: bolder;
+}
+.el-card input[type="text"] {
+    margin-bottom: 10px;
+    width:320px;
+    height: 50px;
+    font-size:20px;
+    padding:6px 10px 0 20px;
+    border: white;
+    border-radius:8px;
+    outline:none;
+    background: rgb(241, 241, 245);
+}
+.el-card input[type="password"] {
+    margin-bottom: 10px;
+    width:320px;
+    height: 50px;
+    font-size:20px;
+    padding:6px 10px 0 20px;
+    border: white;
+    border-radius:8px;
+    outline:none;
+    background: rgb(241, 241, 245);
+}
+
+.el-card input::-webkit-input-placeholder {
+    color: #d5d3d3;
+}
+
+.el-card button{
+    margin-top:5px;
+    width:320px;
+    height: 50px;
+    font-size:23px;
+    font-weight:700;
+    color:#fff;
+    background-image: linear-gradient(to right, #0a93f3 0%, #49b2f8 100%);
+    border:0;
+    border-radius:8px;
+    cursor: pointer;
+    /* 鼠标变成小手 */
+}
+
+.box-card label {
+    margin-top: 10px;
+    margin-left: -235px;
+}
+
+.el-card .nouser {
+    margin-top: 100px;
+}
+.el-card a {
+    color: rgba(40,147,234,0.89);
+    text-decoration: none;
+    cursor: pointer;
+}
+.modal-body input {
+    padding-left: 15px;
+    width: 50%;
+    height: 45px;
+    border-radius: 5px;
+    font-size: large;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    outline:none;
+    border: white;
+    background: rgb(241, 241, 245);
+}
+.el-form {
+    font-size: 20px;
+}
+.aaa .el-form-item__label {
+    text-align: right;
+    vertical-align: middle;
+    float: left;
+    font-size: 20px;
+    color: #606266;
+    line-height: 40px;
+    padding: 0 12px 0 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.aaa .el-radio__label {
+    font-size: 20px;
+}
+.aaa .el-radio-group {
+    font-size: 0;
+    margin-left: 30px;
+}
+.ccc .el-dialog__title {
+    line-height: 24px;
+    font-size: 26px;
+    font-weight: bolder;
+    color: #303133;
+}
+.ccc .el-button--primary {
+    margin-left: 20px;
+    color: #FFF;
+    background-color: #409EFF;
+    border-color: #409EFF;
+    height: 50px;
+    font-size: 20px;
+    width: 100px;
+}
+
+.ccc .el-button--medium {
+    margin-right: 20px;
+    padding: 10px 20px;
+    height: 50px;
+    font-size: 20px;
+    width: 100px;
+}
+.ccc .el-dialog--center .el-dialog__body {
+    text-align: initial;
+    padding: 35px 25px 15px;
+}
+.ccc .el-input__inner {
+    -webkit-appearance: none;
+    background-color: #FFF;
+    background-image: none;
+    border-radius: 4px;
+    border: 1px solid #DCDFE6;
+    box-sizing: border-box;
+    color: #606266;
+    display: inline-block;
+    height: 40px;
+    line-height: 40px;
+    outline: 0;
+    font-size: 20px;
+    padding: 0 15px;
+    -webkit-transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    width: 100%;
+}

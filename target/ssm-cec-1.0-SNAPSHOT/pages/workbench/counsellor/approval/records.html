@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>records</title>
+    <script src="../../../../js/vue.min.js"></script>
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+</head>
+<style>
+    body {
+        background-color: #f9fafb;
+    }
+</style>
+<body>
+<div id="app">
+    <h1>审批出校记录</h1>
+    <br>
+    <div style="margin-left: 23%">
+        <!--        <span class="demonstration">日期：</span>-->
+        <el-date-picker
+                v-model="time"
+                type="date"
+                @change="pageQuery()"
+                placeholder="选择日期">
+        </el-date-picker>
+        &nbsp;    &nbsp;    &nbsp;    &nbsp;    &nbsp;    &nbsp;
+        <el-select v-model="clazzId" clearable placeholder="选择班级"
+                   @visible-change="showClazzs()" @change="pageQuery()" @clear="pageQuery()">
+            <el-option
+                    v-for="item in clazzs"
+                    :key="item.id"
+                    :label="item.name"
+                    :value="item.id">
+            </el-option>
+        </el-select>
+        &nbsp;    &nbsp;    &nbsp;    &nbsp;    &nbsp;    &nbsp;
+        <el-select v-model="permission" clearable  placeholder="选择审批状态" @change="pageQuery()">
+            <el-option
+                    v-for="item in permissions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+            </el-option>
+        </el-select>
+    </div>
+
+    <br>
+    <template>
+
+        <el-table
+                :data="tableData"
+                stripe
+                style="width: 100%">
+            <!--            {{tableData[index].id}}-->
+            <el-table-column
+
+                    prop="creatTime"
+                    label="日期"
+                    align="center"
+                    width="150px"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="studentId"
+                    label="学号"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="studentName"
+                    label="姓名"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="reason"
+                    label="外出事由"
+                    width="250"
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="outLocation"
+                    label="具体外出地点"
+                    align="center"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="duration"
+                    label="外出时长"
+
+                    align="center">
+            </el-table-column>
+            <el-table-column
+                    prop="permission"
+                    label="审批状态"
+                    align="center" >
+                <template slot-scope="scope">
+                    <template v-if="scope.row.permission == '已通过' ">
+                        <font color="#228b22">{{scope.row.permission}}</font>
+                    </template>
+                    <template v-else-if="scope.row.permission == '已拒绝' ">
+                        <font color="red">{{scope.row.permission}}</font>
+                    </template>
+                </template>
+            </el-table-column>
+
+            <!--            <v-if=></v-if>-->
+        </el-table>
+    </template>
+    <div style="margin-left: 33%">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page.sync="currentPage1"
+                :page-size="pageSize"
+                layout="total, prev, pager, next"
+                :total="totals">
+        </el-pagination>
+    </div>
+
+
+
+
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                tableData: [{}],
+                //当前页码
+                currentPage1: 1,
+                //每页条数
+                pageSize: 10,
+                //总条数
+                totals: 1000,
+                time: '',
+                clazzs: [{}],
+                clazzId: '',
+                permissions: [{
+                    value: '已通过',
+                    label: '已通过'
+                }, {
+                    value: '已拒绝',
+                    label: '已拒绝'
+                } ],
+                permission: ''
+            }
+        },
+        mounted(){
+            axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/queryPageApprovalRecords', {
+                params: {
+                    pageNum: this.currentPage1,
+                    pageSize: this.pageSize,
+                    clazzId: this.clazzId,
+                }
+            }).then(function (response) {
+                vm.totals = response.data.totals;
+                vm.tableData = response.data.rows;
+            })
+        },
+        methods: {
+            pageQuery(){
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/queryPageApprovalRecords', {
+                    params: {
+                        pageNum: this.currentPage1,
+                        pageSize: this.pageSize,
+                        time: this.time,
+                        clazzId: this.clazzId,
+                        permission: this.permission
+                    }
+                }).then(function (response) {
+                    vm.totals = response.data.totals;
+                    vm.tableData = response.data.rows;
+                })
+            },
+            showClazzs(){
+                axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/approval/showClazzs').then(response => (vm.clazzs = response.data));
+            },
+            handleSizeChange(val) {
+
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                this.pageQuery();
+                console.log(`当前页: ${val}`);
+            }
+        },
+    })
+</script>
+</html>

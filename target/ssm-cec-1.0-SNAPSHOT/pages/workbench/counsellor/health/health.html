@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>health</title>
+  <script src="../../../../js/vue.min.js"></script>
+  <script src="../../../../js/axios.min.js"></script>
+  <script src="../../../../js/jquery-3.4.1.min.js"></script>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <!-- 引入组件库 -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <style>
+    body {
+      background-color: #f9fafb;
+    }
+
+    .el-row {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .el-col {
+      border-radius: 4px;
+    }
+
+    .grid-content {
+      border-radius: 4px;
+      min-height: 70px;
+    }
+
+    .row-bg {
+      padding: 10px 0;
+
+    }
+
+    .el-carousel__item h3 {
+      color: #475669;
+      font-size: 18px;
+      opacity: 0.75;
+      line-height: 300px;
+      margin: 0;
+
+    }
+
+    .el-carousel__item:nth-child(2n) {
+      background-color: #99a9bf;
+    }
+
+    .el-carousel__item:nth-child(2n+1) {
+      background-color: #d3dce6;
+    }
+
+    .left {
+      margin-left: 80px;
+      position: relative;
+      /*background: #000;*/
+      width: 90%;
+    }
+
+    .right {
+      position: absolute;
+      /*right: 10px;*/
+      left: 700px;
+      top: 80px;
+      width: 800px;
+      /*height: 800px;*/
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1 style="left: 100px;">高校每日健康打卡</h1>
+  <div style="margin-left: 500px">
+    今日打卡：
+    <el-tooltip :content="clock" placement="top">
+      <el-switch
+              v-model="clock"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              active-value="已打卡"
+              inactive-value="未打卡"
+              disabled>
+      </el-switch>
+    </el-tooltip>
+  </div>
+
+  <div class="left">
+
+    <el-row>
+      <el-col span="24">
+        <template>
+          <h3>1. 晨检体温是否超过37.3°C</h3>
+          <el-radio v-model="morningCheck" label="是" style="left: 20px;">是</el-radio>
+          <el-radio v-model="morningCheck" label="否" style="left: 20px">否</el-radio>
+        </template>
+      </el-col>
+    </el-row>
+
+    <el-row>
+      <el-col span="24">
+        <template>
+          <h3>2. 午检体温是否超过37.3°C</h3>
+
+          <el-radio v-model="afternoonCheck" label="是" style="left: 20px;">是</el-radio>
+          <el-radio v-model="afternoonCheck" label="否" style="left: 20px;">否</el-radio>
+        </template>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col span="24">
+        <template>
+          <h3>3. 是否在校</h3>
+
+          <el-radio v-model="inSchool" label="是" style="left: 20px;">是</el-radio>
+          <el-radio v-model="inSchool" label="否" style="left: 20px;">否</el-radio>
+        </template>
+      </el-col>
+    </el-row>
+
+    <el-row>
+      <el-col span="24">
+        <template>
+          <h3>4. 是否在疫情中高风险地区</h3>
+
+          <el-radio v-model="inRisk" label="是" style="left: 20px;">是</el-radio>
+          <el-radio v-model="inRisk" label="否" style="left: 20px;">否</el-radio>
+        </template>
+      </el-col>
+    </el-row>
+
+    <el-row>
+      <el-col span="24">
+        <template>
+          <h3>5. 是否处于医学隔离</h3>
+
+          <el-radio v-model="inIsolation" label="是" style="left: 20px;">是</el-radio>
+          <el-radio v-model="inIsolation" label="否" style="left: 20px;">否</el-radio>
+        </template>
+      </el-col>
+    </el-row>
+    <br>
+    <el-row>
+      <el-button type="primary" @click="open" round style="margin-left: 200px">提交</el-button>
+    </el-row>
+  </div>
+  <div class="right">
+    <div class="demo-image__lazy">
+      <el-image v-for="url in urls" :key="url" :src="url" lazy></el-image>
+    </div>
+  </div>
+</div>
+</body>
+<script type="text/javascript">
+  var vm = new Vue({
+    el: "#app",
+    data() {
+      return {
+        morningCheck: '',
+        afternoonCheck: '',
+        inSchool: '',
+        inRisk: '',
+        inIsolation: '',
+        urls: [
+          'https://fuss10.elemecdn.com/3/28/bbf893f792f03a54408b3b7a7ebf0jpeg.jpeg',
+        ],
+        clock: '',
+      };
+
+    },
+    mounted() {
+      axios.get('http://127.0.0.1:8080/cec/pages/workbench/counsellor/health/checkClock').then(response => (this.clock = response.data));
+    },
+    methods: {
+      open() {
+        if (this.morningCheck !== '' && this.afternoonCheck !== '' && this.inSchool !== '' && this.inRisk !== '' && this.inIsolation !== '') {
+          this.$confirm('是否提交?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            modal: false,
+            type: 'warning'
+          }).then(() => {
+            axios({
+              method: "post",
+              url: "http://127.0.0.1:8080/cec/pages/workbench/counsellor/health/health",
+              data: {
+                morningCheck: this.morningCheck,
+                afternoonCheck: this.afternoonCheck,
+                inSchool: this.inSchool,
+                inRisk: this.inRisk,
+                inIsolation: this.inIsolation,
+              }
+            }).then(function (response) {
+              var success = response.data;
+              if (success == "1") {
+                vm.clock = "已打卡";
+                Vue.prototype.$message({
+                  message: '提交成功！',
+                  type: 'success'
+                });
+              } else if(success == "0") {
+                Vue.prototype.$message({
+                  message: '请勿重复打卡！',
+                  type: 'error'
+                });
+              }
+            })
+          })
+        } else {
+          this.$message({
+            type: 'warning',
+            message: '填写不完整！'
+          });
+        }
+
+      }
+    }
+  })
+</script>
+</html>

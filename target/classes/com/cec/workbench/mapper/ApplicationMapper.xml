@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cec.workbench.mapper.ApplicationMapper">
+  <resultMap id="BaseResultMap" type="com.cec.workbench.pojo.Application">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="dept_id" jdbcType="VARCHAR" property="deptId" />
+    <result column="student_id" jdbcType="INTEGER" property="studentId" />
+    <result column="student_name" jdbcType="VARCHAR" property="studentName" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="phone_number" jdbcType="VARCHAR" property="phoneNumber" />
+    <result column="out_range" jdbcType="VARCHAR" property="outRange" />
+    <result column="out_location" jdbcType="VARCHAR" property="outLocation" />
+    <result column="reason" jdbcType="VARCHAR" property="reason" />
+    <result column="start_time" jdbcType="DATE" property="startTime" />
+    <result column="end_time" jdbcType="DATE" property="endTime" />
+    <result column="duration" jdbcType="VARCHAR" property="duration" />
+    <result column="parents_name" jdbcType="VARCHAR" property="parentsName" />
+    <result column="parents_number" jdbcType="VARCHAR" property="parentsNumber" />
+    <result column="permission" jdbcType="VARCHAR" property="permission" />
+    <result column="creat_time" jdbcType="TIMESTAMP" property="creatTime" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_application
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.cec.workbench.pojo.Application">
+    insert into t_application (id, dept_id, student_id, 
+      student_name, sex, phone_number, 
+      out_range, out_location, reason, 
+      start_time, end_time, duration, 
+      parents_name, parents_number, permission, 
+      creat_time)
+    values (#{id,jdbcType=INTEGER}, #{deptId,jdbcType=VARCHAR}, #{studentId,jdbcType=INTEGER}, 
+      #{studentName,jdbcType=VARCHAR}, #{sex,jdbcType=VARCHAR}, #{phoneNumber,jdbcType=VARCHAR}, 
+      #{outRange,jdbcType=VARCHAR}, #{outLocation,jdbcType=VARCHAR}, #{reason,jdbcType=VARCHAR}, 
+      #{startTime,jdbcType=DATE}, #{endTime,jdbcType=DATE}, #{duration,jdbcType=VARCHAR}, 
+      #{parentsName,jdbcType=VARCHAR}, #{parentsNumber,jdbcType=VARCHAR}, '待审批',
+        CURRENT_TIMESTAMP)
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.cec.workbench.pojo.Application">
+    update t_application
+    set dept_id = #{deptId,jdbcType=VARCHAR},
+      student_id = #{studentId,jdbcType=INTEGER},
+      student_name = #{studentName,jdbcType=VARCHAR},
+      sex = #{sex,jdbcType=VARCHAR},
+      phone_number = #{phoneNumber,jdbcType=VARCHAR},
+      out_range = #{outRange,jdbcType=VARCHAR},
+      out_location = #{outLocation,jdbcType=VARCHAR},
+      reason = #{reason,jdbcType=VARCHAR},
+      start_time = #{startTime,jdbcType=DATE},
+      end_time = #{endTime,jdbcType=DATE},
+      duration = #{duration,jdbcType=VARCHAR},
+      parents_name = #{parentsName,jdbcType=VARCHAR},
+      parents_number = #{parentsNumber,jdbcType=VARCHAR},
+      permission = #{permission,jdbcType=VARCHAR},
+      creat_time = #{creatTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id, dept_id, student_id, student_name, sex, phone_number, out_range, out_location, 
+    reason, start_time, end_time, duration, parents_name, parents_number, permission, 
+    creat_time
+    from t_application
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, dept_id, student_id, student_name, sex, phone_number, out_range, out_location, 
+    reason, start_time, end_time, duration, parents_name, parents_number, permission, 
+    creat_time
+    from t_application
+  </select>
+  <select id="selectPageByStudentIdAndPermissionAndDate" resultMap="BaseResultMap">
+    select id, dept_id, student_id, student_name, sex, phone_number, out_range, out_location,
+           reason, start_time, end_time, duration, parents_name, parents_number, permission,
+           creat_time
+    from t_application
+    <where>
+      <if test="permission != null and permission != ''">
+        and permission = #{permission}
+      </if>
+      <if test="creatTime != null and creatTime != ''">
+        and creat_time like '${creatTime}%'
+      </if>
+        and student_id = #{studentId}
+    </where>
+        order by creat_time desc
+  </select>
+  <select id="selectCountByStudentIdAndPermissionAndDate" resultType="Integer">
+    select count(*)
+    from t_application
+    <where>
+      <if test="permission != null and permission != ''">
+        and permission = #{permission}
+      </if>
+      <if test="creatTime != null and creatTime != ''">
+        and creat_time like '${creatTime}%'
+      </if>
+      and student_id = #{studentId}
+    </where>
+  </select>
+  <update id="updateByApplication">
+    update t_application
+    set out_location = #{outLocation},out_range = #{outRange},reason = #{reason},start_time = #{startTime},end_time = #{endTime} ,duration = #{duration}
+    where id = #{id}
+  </update>
+  <update id="updatePermissionByNowTimeAndStudentId">
+    update t_application
+    set permission = '已过期'
+    where student_id = #{studentId} and DATE(start_time) &lt; #{nowTime} and permission = '待审批';
+  </update>
+  <select id="selectPageByCounsellorIdAndDateAndClazzId" resultType="Application">
+    SELECT
+      s1.id,
+      s1.dept_id,
+      s1.student_id,
+      s1.student_name,
+      s1.sex,
+      s1.phone_number,
+      s1.out_range,
+      s1.out_location,
+      s1.reason,
+      s1.start_time,
+      s1.end_time,
+      s1.duration,
+      s1.parents_name,
+      s1.parents_number,
+      s1.creat_time
+    FROM
+      t_application s1,
+      t_student s2,
+      t_clazz s3
+    WHERE
+    <if test="creatTime != null and creatTime != ''">
+       s1.creat_time like '${creatTime}%' AND
+    </if>
+    <if test="clazzId != null and clazzId != ''">
+      s3.id = #{clazzId} AND
+    </if>
+        s3.counsellor_id = #{counsellorId}
+      AND s3.id = s2.clazz_id
+      AND s2.id = s1.student_id
+      AND s1.permission = '待审批'
+  </select>
+  <select id="selectCountByCounsellorIdAndDateAndClazzId" resultType="Integer">
+    SELECT
+    COUNT(*)
+    FROM
+    t_application s1,
+    t_student s2,
+    t_clazz s3
+    WHERE
+    <if test="creatTime != null and creatTime != ''">
+      s1.creat_time like '${creatTime}%' AND
+    </if>
+    <if test="clazzId != null and clazzId != ''">
+      s3.id = #{clazzId} AND
+    </if>
+    s3.counsellor_id = #{counsellorId}
+    AND s3.id = s2.clazz_id
+    AND s2.id = s1.student_id
+    AND s1.permission = '待审批'
+    order by creat_time desc
+  </select>
+  <update id="updatePermissionByNowTimeAndCounsellorId">
+    UPDATE t_application s1,
+      t_student s2,
+      t_clazz s3
+    SET s1.permission = '已过期'
+    WHERE
+      s3.counsellor_id = #{counsellorId}
+      AND s3.id = s2.clazz_id
+      AND s2.id = s1.student_id
+      AND s1.permission = '待审批'
+      AND DATE(s1.start_time) &lt; #{nowTime}
+  </update>
+  <update id="updatePermissionById">
+    UPDATE t_application
+    SET permission = #{permission}
+    WHERE
+        id = #{id};
+  </update>
+  <select id="selectPageApprovalRecordsByCounsellorIdAndDateAndClazzId" resultType="Application">
+    SELECT
+    s1.id,
+    s1.dept_id,
+    s1.student_id,
+    s1.student_name,
+    s1.sex,
+    s1.phone_number,
+    s1.out_range,
+    s1.out_location,
+    s1.reason,
+    s1.start_time,
+    s1.end_time,
+    s1.duration,
+    s1.parents_name,
+    s1.parents_number,
+    s1.creat_time,
+    s1.permission
+    FROM
+    t_application s1,
+    t_student s2,
+    t_clazz s3
+    WHERE
+    <if test="creatTime != null and creatTime != ''">
+      s1.creat_time like '${creatTime}%' AND
+    </if>
+    <if test="clazzId != null and clazzId != ''">
+      s3.id = #{clazzId} AND
+    </if>
+    s3.counsellor_id = #{counsellorId}
+    AND s3.id = s2.clazz_id
+    AND s2.id = s1.student_id
+    <if test="permission != null and permission != ''">
+      AND s1.permission = #{permission}
+    </if>
+    <if test="permission == null || permission == ''">
+      AND s1.permission != '已过期'
+      AND s1.permission != '待审批'
+    </if>
+    order by creat_time desc
+  </select>
+  <select id="selectCountApprovalRecordsByCounsellorIdAndDateAndClazzId" resultType="Integer">
+    SELECT
+    COUNT(*)
+    FROM
+    t_application s1,
+    t_student s2,
+    t_clazz s3
+    WHERE
+    <if test="creatTime != null and creatTime != ''">
+      s1.creat_time like '${creatTime}%' AND
+    </if>
+    <if test="clazzId != null and clazzId != ''">
+      s3.id = #{clazzId} AND
+    </if>
+    s3.counsellor_id = #{counsellorId}
+    AND s3.id = s2.clazz_id
+    AND s2.id = s1.student_id
+    <if test="permission != null and permission != ''">
+      AND s1.permission = #{permission}
+    </if>
+    <if test="permission == null || permission == ''">
+      AND s1.permission != '已过期'
+      AND s1.permission != '待审批'
+    </if>
+
+
+  </select>
+</mapper>

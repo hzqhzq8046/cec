@@ -1,0 +1,605 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cec.workbench.mapper.HealthMapper">
+    <resultMap id="BaseResultMap" type="com.cec.workbench.pojo.Health">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="user_id" jdbcType="INTEGER" property="userId"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="clazz_id" jdbcType="VARCHAR" property="clazzId"/>
+        <result column="clazz_name" jdbcType="VARCHAR" property="clazzName"/>
+        <result column="morning_check" jdbcType="VARCHAR" property="morningCheck"/>
+        <result column="afternoon_check" jdbcType="VARCHAR" property="afternoonCheck"/>
+        <result column="in_school" jdbcType="VARCHAR" property="inSchool"/>
+        <result column="in_risk" jdbcType="VARCHAR" property="inRisk"/>
+        <result column="in_isolation" jdbcType="VARCHAR" property="inIsolation"/>
+        <result column="clock_time" jdbcType="DATE" property="clockTime"/>
+    </resultMap>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+        delete
+        from t_health
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <insert id="insert" parameterType="com.cec.workbench.pojo.Health">
+        insert into t_health (id, user_id, user_name,
+                              clazz_id, clazz_name, morning_check,
+                              afternoon_check, in_school, in_risk,
+                              in_isolation, clock_time)
+        values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{userName,jdbcType=VARCHAR},
+                #{clazzId,jdbcType=VARCHAR}, #{clazzName,jdbcType=VARCHAR}, #{morningCheck,jdbcType=VARCHAR},
+                #{afternoonCheck,jdbcType=VARCHAR}, #{inSchool,jdbcType=VARCHAR}, #{inRisk,jdbcType=VARCHAR},
+                #{inIsolation,jdbcType=VARCHAR}, CURDATE())
+    </insert>
+    <update id="updateByPrimaryKey" parameterType="com.cec.workbench.pojo.Health">
+        update t_health
+        set user_id         = #{userId,jdbcType=INTEGER},
+            user_name       = #{userName,jdbcType=VARCHAR},
+            clazz_id        = #{clazzId,jdbcType=VARCHAR},
+            clazz_name      = #{clazzName,jdbcType=VARCHAR},
+            morning_check   = #{morningCheck,jdbcType=VARCHAR},
+            afternoon_check = #{afternoonCheck,jdbcType=VARCHAR},
+            in_school       = #{inSchool,jdbcType=VARCHAR},
+            in_risk         = #{inRisk,jdbcType=VARCHAR},
+            in_isolation    = #{inIsolation,jdbcType=VARCHAR},
+            clock_time      = #{clockTime,jdbcType=DATE}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select id,
+               user_id,
+               user_name,
+               clazz_id,
+               clazz_name,
+               morning_check,
+               afternoon_check,
+               in_school,
+               in_risk,
+               in_isolation,
+               clock_time
+        from t_health
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectAll" resultMap="BaseResultMap">
+        select id,
+               user_id,
+               user_name,
+               clazz_id,
+               clazz_name,
+               morning_check,
+               afternoon_check,
+               in_school,
+               in_risk,
+               in_isolation,
+               clock_time
+        from t_health
+    </select>
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        select id,
+               user_id,
+               user_name,
+               clazz_id,
+               clazz_name,
+               morning_check,
+               afternoon_check,
+               in_school,
+               in_risk,
+               in_isolation,
+               clock_time
+        from t_health
+        where user_id = #{userId,jdbcType=INTEGER}
+          and clock_time = CURDATE()
+    </select>
+    <select id="selectClockPageByCounsellorIdAndCondition" resultType="Health">
+        SELECT
+        t_health.id,t_health.user_id,t_health.user_name,t_health.clazz_id,t_health.clazz_name,t_health.morning_check,t_health.afternoon_check,t_health.in_school,t_health.in_risk,t_health.in_isolation,t_health.clock_time
+        FROM
+        t_student,
+        t_health,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        AND clock_time = #{clockTime}
+        <if test="clazzId != null and clazzId != ''">
+            AND t_student.clazz_id = #{clazzId}
+        </if>
+        AND t_student.id = t_health.user_id
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND t_health.clazz_id = t_clazz.id
+    </select>
+    <select id="selectClockCountByCounsellorIdAndCondition" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        t_student,
+        t_health,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        AND clock_time = #{clockTime}
+        <if test="clazzId != null and clazzId != ''">
+            AND t_student.clazz_id = #{clazzId}
+        </if>
+        AND t_student.id = t_health.user_id
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND t_health.clazz_id = t_clazz.id
+    </select>
+    <select id="selectNotClockPageByCounsellorIdAndCondition" resultType="Health">
+        SELECT
+        s1.id as user_id,
+        s1.NAME as user_name,
+        s1.clazz_id as clazz_id,
+        s1.clazz_name as clazz_name
+        FROM
+        t_student s1,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        <if test="clazzId != null and clazzId != ''">
+            AND s1.clazz_id = #{clazzId}
+        </if>
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND s1.clazz_id = t_clazz.id
+        AND s1.id NOT IN (
+        SELECT
+        s2.id
+        FROM
+        t_student s2,
+        t_health,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        AND s2.id = t_health.user_id
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND t_health.clazz_id = t_clazz.id
+        AND clock_time = #{clockTime}
+        )
+    </select>
+    <select id="selectNotClockCountByCounsellorIdAndCondition" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        t_student s1,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        <if test="clazzId != null and clazzId != ''">
+            AND s1.clazz_id = #{clazzId}
+        </if>
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND s1.clazz_id = t_clazz.id
+        AND s1.id NOT IN (
+        SELECT
+        s2.id
+        FROM
+        t_student s2,
+        t_health,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        AND s2.id = t_health.user_id
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND t_health.clazz_id = t_clazz.id
+        AND clock_time = #{clockTime}
+        )
+    </select>
+    <select id="selectClockPageTagByCounsellorIdAndCondition" resultType="Health">
+        SELECT
+        t_health.id,t_health.user_id,t_health.user_name,t_health.clazz_id,t_health.clazz_name,t_health.morning_check,t_health.afternoon_check,t_health.in_school,t_health.in_risk,t_health.in_isolation,t_health.clock_time
+        FROM
+        t_student,
+        t_health,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        AND clock_time = #{clockTime}
+        <if test="clazzId != null and clazzId != ''">
+            AND t_student.clazz_id = #{clazzId}
+        </if>
+        <if test="tags != null and tags != ''">
+            <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                <if test="tag == '体温异常'">
+                    t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                </if>
+                <if test="tag == '隔离中'">
+                    t_health.in_isolation = '是'
+                </if>
+                <if test="tag == '处于中高风险地区'">
+                    t_health.in_risk = '是'
+                </if>
+                <if test="tag == '不在校'">
+                    t_health.in_school = '否'
+                </if>
+            </foreach>
+        </if>
+        AND t_student.id = t_health.user_id
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND t_health.clazz_id = t_clazz.id
+    </select>
+    <select id="selectClockCountTagByCounsellorIdAndCondition" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        t_student,
+        t_health,
+        t_counsellor,
+        t_clazz
+        WHERE
+        t_counsellor.id = #{id}
+        AND clock_time = #{clockTime}
+        <if test="clazzId != null and clazzId != ''">
+            AND t_student.clazz_id = #{clazzId}
+        </if>
+        <if test="tags != null and tags != ''">
+            <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                <if test="tag == '体温异常'">
+                    t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                </if>
+                <if test="tag == '隔离中'">
+                    t_health.in_isolation = '是'
+                </if>
+                <if test="tag == '处于中高风险地区'">
+                    t_health.in_risk = '是'
+                </if>
+                <if test="tag == '不在校'">
+                    t_health.in_school = '否'
+                </if>
+            </foreach>
+        </if>
+        AND t_student.id = t_health.user_id
+        AND t_counsellor.id = t_clazz.counsellor_id
+        AND t_health.clazz_id = t_clazz.id
+    </select>
+    <select id="selectClockPageByDeptIdAndClazzIAndTag" resultType="Health">
+        SELECT
+        t_health.id,t_health.user_id,t_health.user_name,t_health.clazz_id,t_health.clazz_name,t_health.morning_check,t_health.afternoon_check,t_health.in_school,t_health.in_risk,t_health.in_isolation,t_health.clock_time
+        FROM
+        t_student,
+        t_health,
+        t_dept,
+        t_clazz
+        <where>
+            <if test="deptId != null and deptId != ''">
+                AND t_dept.id = #{deptId}
+            </if>
+            AND clock_time = #{clockTime}
+            <if test="clazzId != null and clazzId != ''">
+                AND t_student.clazz_id = #{clazzId}
+            </if>
+            <if test="tags != null and tags != ''">
+                <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                    <if test="tag == '体温异常'">
+                        t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                    </if>
+                    <if test="tag == '隔离中'">
+                        t_health.in_isolation = '是'
+                    </if>
+                    <if test="tag == '处于中高风险地区'">
+                        t_health.in_risk = '是'
+                    </if>
+                    <if test="tag == '不在校'">
+                        t_health.in_school = '否'
+                    </if>
+                </foreach>
+            </if>
+            AND t_student.id = t_health.user_id
+            AND t_dept.id = t_clazz.dept_id
+            AND t_health.clazz_id = t_clazz.id
+        </where>
+    </select>
+    <select id="selectClockCountByDeptIdAndClazzIAndTag" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        t_student,
+        t_health,
+        t_dept,
+        t_clazz
+        <where>
+            <if test="deptId != null and deptId != ''">
+                AND t_dept.id = #{deptId}
+            </if>
+            AND clock_time = #{clockTime}
+            <if test="clazzId != null and clazzId != ''">
+                AND t_student.clazz_id = #{clazzId}
+            </if>
+            <if test="tags != null and tags != ''">
+                <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                    <if test="tag == '体温异常'">
+                        t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                    </if>
+                    <if test="tag == '隔离中'">
+                        t_health.in_isolation = '是'
+                    </if>
+                    <if test="tag == '处于中高风险地区'">
+                        t_health.in_risk = '是'
+                    </if>
+                    <if test="tag == '不在校'">
+                        t_health.in_school = '否'
+                    </if>
+                </foreach>
+            </if>
+            AND t_student.id = t_health.user_id
+            AND t_dept.id = t_clazz.dept_id
+            AND t_health.clazz_id = t_clazz.id
+        </where>
+    </select>
+    <select id="selectNotClockPageByDeptIdAndClazzId" resultType="Health">
+        SELECT
+        s1.id as user_id,
+        s1.NAME as user_name,
+        s1.clazz_id as clazz_id,
+        s1.clazz_name as clazz_name
+        FROM
+        t_student s1,
+        t_dept,
+        t_clazz
+        <where>
+            <if test="deptId != null and deptId != ''">
+                AND t_dept.id = #{deptId}
+            </if>
+            <if test="clazzId != null and clazzId != ''">
+                AND s1.clazz_id = #{clazzId}
+            </if>
+
+            AND t_dept.id = t_clazz.dept_id
+            AND s1.clazz_id = t_clazz.id
+            AND s1.NAME
+        </where>
+        NOT IN (
+        SELECT
+        s2.NAME
+        FROM
+        t_student s2,
+        t_health,
+        t_dept,
+        t_clazz
+        <where>
+            <if test="deptId != null and deptId != ''">
+                AND t_dept.id = #{deptId}
+            </if>
+            AND s2.id = t_health.user_id
+            AND t_dept.id = t_clazz.dept_id
+            AND t_health.clazz_id = t_clazz.id
+            AND clock_time = #{clockTime}
+        </where>
+        )
+    </select>
+    <select id="selectNotClockCountByDeptIdAndClazzId" resultType="Integer">
+        SELECT
+        count(*)
+        FROM
+        t_student s1,
+        t_dept,
+        t_clazz
+        <where>
+            <if test="deptId != null and deptId != ''">
+                AND t_dept.id = #{deptId}
+            </if>
+            <if test="clazzId != null and clazzId != ''">
+                AND s1.clazz_id = #{clazzId}
+            </if>
+
+            AND t_dept.id = t_clazz.dept_id
+            AND s1.clazz_id = t_clazz.id
+            AND s1.NAME
+        </where>
+        NOT IN (
+        SELECT
+        s2.NAME
+        FROM
+        t_student s2,
+        t_health,
+        t_dept,
+        t_clazz
+        <where>
+            <if test="deptId != null and deptId != ''">
+                AND t_dept.id = #{deptId}
+            </if>
+            AND s2.id = t_health.user_id
+            AND t_dept.id = t_clazz.dept_id
+            AND t_health.clazz_id = t_clazz.id
+            AND clock_time = #{clockTime}
+        </where>
+        )
+    </select>
+    <select id="selectCounsellorClockPageByDeptIdAndTag" resultType="Health">
+        SELECT
+        t_health.id,t_health.user_id,t_health.user_name,t_health.clazz_id,
+        t_health.clazz_name,t_health.morning_check,t_health.afternoon_check,t_health.in_school,
+        t_health.in_risk,t_health.in_isolation,t_health.clock_time
+        FROM
+        t_counsellor,
+        t_health
+        <where>
+            t_counsellor.id = t_health.user_id
+            AND clock_time = #{clockTime}
+            <if test="deptId != null and deptId != ''">
+                AND dept_id = #{deptId}
+            </if>
+            <if test="tags != null and tags != ''">
+                <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                    <if test="tag == '体温异常'">
+                        t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                    </if>
+                    <if test="tag == '隔离中'">
+                        t_health.in_isolation = '是'
+                    </if>
+                    <if test="tag == '处于中高风险地区'">
+                        t_health.in_risk = '是'
+                    </if>
+                    <if test="tag == '不在校'">
+                        t_health.in_school = '否'
+                    </if>
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="selectCounsellorClockCountByDeptIdAndTag" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        t_counsellor,
+        t_health
+        <where>
+            t_counsellor.id = t_health.user_id
+            AND clock_time = #{clockTime}
+            <if test="deptId != null and deptId != ''">
+                AND dept_id = #{deptId}
+            </if>
+            <if test="tags != null and tags != ''">
+                <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                    <if test="tag == '体温异常'">
+                        t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                    </if>
+                    <if test="tag == '隔离中'">
+                        t_health.in_isolation = '是'
+                    </if>
+                    <if test="tag == '处于中高风险地区'">
+                        t_health.in_risk = '是'
+                    </if>
+                    <if test="tag == '不在校'">
+                        t_health.in_school = '否'
+                    </if>
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="selectStaffClockPageByTag" resultType="Health">
+        SELECT
+        t_health.id,t_health.user_id,t_health.user_name,t_health.clazz_id,
+        t_health.clazz_name,t_health.morning_check,t_health.afternoon_check,t_health.in_school,
+        t_health.in_risk,t_health.in_isolation,t_health.clock_time
+        FROM
+        t_staff,
+        t_health
+        <where>
+            t_staff.id = t_health.user_id
+            AND clock_time = #{clockTime}
+            <if test="tags != null and tags != ''">
+                <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                    <if test="tag == '体温异常'">
+                        t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                    </if>
+                    <if test="tag == '隔离中'">
+                        t_health.in_isolation = '是'
+                    </if>
+                    <if test="tag == '处于中高风险地区'">
+                        t_health.in_risk = '是'
+                    </if>
+                    <if test="tag == '不在校'">
+                        t_health.in_school = '否'
+                    </if>
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="selectStaffClockCountByTag" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        t_staff,
+        t_health
+        <where>
+            t_staff.id = t_health.user_id
+            AND clock_time = #{clockTime}
+            <if test="tags != null and tags != ''">
+                <foreach collection="tags" item="tag" separator="or" open="and(" close=")">
+                    <if test="tag == '体温异常'">
+                        t_health.morning_check = '是' or t_health.afternoon_check = '是'
+                    </if>
+                    <if test="tag == '隔离中'">
+                        t_health.in_isolation = '是'
+                    </if>
+                    <if test="tag == '处于中高风险地区'">
+                        t_health.in_risk = '是'
+                    </if>
+                    <if test="tag == '不在校'">
+                        t_health.in_school = '否'
+                    </if>
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="selectCounsellorNotClockPageByDeptId" resultType="Health">
+        SELECT
+            s1.id as user_id,
+            s1.NAME as user_name
+        from
+            t_counsellor s1
+        WHERE
+        <if test="deptId != null and deptId != ''">
+            s1.dept_id = #{deptId} AND
+        </if>
+                s1.id NOT IN(
+                SELECT
+                    s2.id
+                FROM
+                    t_counsellor s2,
+                    t_health s3
+                WHERE
+                    s2.id = s3.user_id
+                  AND s3.clock_time = #{clockTime}
+            )
+    </select>
+    <select id="selectCounsellorNotClockCountByDeptId" resultType="Integer">
+        SELECT
+       COUNT(*)
+        from
+        t_counsellor s1
+        WHERE
+        <if test="deptId != null and deptId != ''">
+             s1.dept_id = #{deptId} AND
+        </if>
+        s1.id NOT IN(
+        SELECT
+        s2.id
+        FROM
+        t_counsellor s2,
+        t_health s3
+        WHERE
+        s2.id = s3.user_id
+        AND s3.clock_time = #{clockTime}
+        )
+    </select>
+    <select id="selectStaffNotClockPage" resultType="Health">
+        SELECT
+            s1.id as user_id,
+            s1.NAME as user_name
+        from
+            t_staff s1
+        WHERE
+                s1.id NOT IN(
+                SELECT
+                    s2.id
+                FROM
+                    t_staff s2,
+                    t_health s3
+                WHERE
+                    s2.id = s3.user_id
+                  AND s3.clock_time = #{clockTime}
+            )
+    </select>
+    <select id="selectStaffNotClockCount" resultType="Integer">
+        SELECT
+            COUNT(*)
+        from
+            t_staff s1
+        WHERE
+                s1.id NOT IN(
+                SELECT
+                    s2.id
+                FROM
+                    t_staff s2,
+                    t_health s3
+                WHERE
+                    s2.id = s3.user_id
+                  AND s3.clock_time = #{clockTime}
+            )
+    </select>
+</mapper>

@@ -1,0 +1,128 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!--    <script src="../../../../js/vue.min.js"></script>-->
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <script src="../../../../js/flexible.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+        .box-card {
+            margin-left: 100px;
+            margin-bottom: 30px;
+            padding-left: 30px;
+            padding-right: 30px;
+            border-radius: 10px;
+            width: 80%;
+        }
+        .ttitle {
+            display:block;
+            height: 70px;
+            width: 170px;
+            font-size: 22px;
+            font-weight: bold ;
+            text-align: center;
+            line-height: 60px;
+            /*background-color: #49b2f8;*/
+        }
+        .item1 {
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            margin-right: 40px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>我的通知</h1>
+    <el-col :span="22" v-for="(item) in notice" :key="item.id" :offset="1" >
+        <el-card class="box-card">
+            <div style="margin-bottom: 0px">
+                <span class="ttitle">
+                    <el-avatar :size="65" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+                    {{item.fromName}}
+                </span>
+                <span style="width: 30px;height: 30px;padding-top: 30px;margin-left: 96%;">
+                    <template v-if="item.isRead == 0">
+                        <el-badge value="new" class="item1">&nbsp</el-badge>
+                    </template>
+                    <template v-else>
+                        <el-badge value="new" class="item1" hidden>&nbsp</el-badge>
+                    </template>
+                </span>
+            </div>
+            <el-collapse accordion @change="read(item)">
+                <el-collapse-item>
+                    <template slot="title">
+                        <span style="font-size: 20px; font-weight: 550;color: #2a8df1">{{item.title}}</span>
+                    </template>
+                    <div><span style="margin-left: 40px;"></span><span style="font-size: 17px;font-weight: 400">{{item.content}}</span></div>
+                </el-collapse-item>
+            </el-collapse>
+            <span style="font-size: 15px">{{item.sendTime}}</span>
+        </el-card>
+    </el-col>
+    <template>
+        <el-backtop target=".page-component__scroll .el-scrollbar__wrap"></el-backtop>
+    </template>
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        mounted(){
+            axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/counsellor/personal'
+            ).then(function (resp) {
+                vm.id = resp.data.id;
+                vm.getNotices(vm.id);
+            });
+        },
+        data() {
+            return {
+                id: 0,
+                notice: [{
+
+                }],
+            }
+        },
+        methods: {
+            handleOpen(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            handleClose(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            read(notice) {
+                axios.post('http://127.0.0.1:8080/cec/pages/workbench/counsellor/content/readNotice',
+                    notice
+                ).then(function (resp) {
+                    if(resp.data == "1") {
+                        vm.getNotices(vm.id);
+                        window.parent.vm.getNotReadCount(vm.id);
+                    } else {
+                        // Vue.prototype.$message({
+                        //     message: '获取数据失败~',
+                        //     type: 'error'
+                        // });
+                    }
+                })
+            },
+            getNotices(toId) {
+                axios.post('http://127.0.0.1:8080/cec/pages/workbench/counsellor/content/getNotices',
+                    {
+                        toId: toId,
+                    }
+                ).then(function (response) {
+                    vm.notice = response.data;
+                })
+            }
+        }
+    });
+</script>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人信息</title>
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<!--    <script src="../../../../js/vue.min.js"></script>-->
+    <script src="../../../js/axios.min.js"></script>
+    <script src="../../../js/jquery-3.4.1.min.js"></script>
+    <script src="../../../js/flexible.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            display: table;
+            content: "";
+        }
+        .clearfix:after {
+            clear: both
+        }
+
+        .box-card1{
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .box-card2{
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        .el-button{
+            margin-left: 15px;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>&nbsp;&nbsp;个人资料</h1>
+    <el-card class="box-card1">
+        <div slot="header" class="clearfix">
+            <span style="font-size: 18px">基本信息</span>
+        </div>
+        <span style="padding-left: 40px">
+            <el-avatar :size="80" src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png"></el-avatar>
+        </span>
+        <span class="car-body" style=" margin-left: 20px; font-size: 23px;">
+            {{name}}
+        </span>
+        <el-popover
+                placement="top"
+                width="200"
+                title="修改昵称"
+                v-model="visible1">
+            <el-input v-model="name" placeholder="请输入新昵称" clearable></el-input>
+            <div style="text-align: right; margin: 0">
+                <el-button size="mini" type="text" @click="visible1 = false">取消</el-button>
+                <el-button type="primary" size="mini" @click="visible1 = false">保存</el-button>
+            </div>
+            <el-button slot="reference" type="text" icon="el-icon-edit">编辑</el-button>
+        </el-popover>
+        <div style="padding-left: 45px; font-size: 18px;margin-top: 30px;color: #858585">学号<span style="margin-left: 20px;color: #000">{{id}}</span></div>
+    </el-card>
+
+    <el-card class="box-card2">
+        <div slot="header" class="clearfix">
+            <span style="font-size: 18px;">详细资料</span>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>手机号</span><span style="margin-left: 20px; color: black">{{phoneNumber}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="修改手机号"
+                    v-model="visible2">
+                <el-input type="text" placeholder="请输入手机号" v-model="phoneNumber" maxlength="11" show-word-limit></el-input>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible2 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="visible2 = false">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>民族</span><span style="margin-left: 38px; color: black">{{origin}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="民族"
+                    v-model="visible6">
+                <el-input type="text" placeholder="民族" v-model="origin" show-word-limit></el-input>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible6 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="visible6 = false">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>性别</span><span style="margin-left: 38px; color: black">{{sex}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="性别"
+                    v-model="visible3">
+                <template>
+                    <el-radio v-model="sex" label="男">男</el-radio>
+                    <el-radio v-model="sex" label="女">女</el-radio>
+                </template>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible3 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="visible3 = false">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>生日</span><span style="margin-left: 38px; color: black">{{birth}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="修改生日"
+                    v-model="visible4">
+                <div class="block">
+                    <span class="demonstration">默认</span>
+                    <el-date-picker
+                            v-model="birth"
+                            type="date"
+                            placeholder="选择日期">
+                    </el-date-picker>
+                </div>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible4 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="visible4 = false">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+            </div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>年龄</span><span style="margin-left: 38px; color: black">{{age}}</span></div>
+        <div style="padding-left: 45px; font-size: 18px; margin-bottom: 14px;color: #858585"><span>籍贯</span><span style="margin-left: 38px; color: black">{{address}}</span>
+            <el-popover
+                    placement="top"
+                    width="300"
+                    title="修改籍贯"
+                    v-model="visible5">
+                <el-input type="text" placeholder="请输入内容" v-model="address"show-word-limit></el-input>
+                <div style="text-align: right; margin: 10px">
+                    <el-button size="mini" type="text" @click="visible5 = false">取消</el-button>
+                    <el-button type="primary" size="mini" @click="visible5 = false">保存</el-button>
+                </div>
+                <el-button slot="reference" type="text" >修改</el-button>
+            </el-popover>
+        </div>
+    </el-card>
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                visible1: false,
+                visible2:false,
+                visible3: false,
+                visible4:false,
+                visible5: false,
+                visible6: false,
+                id: '32020',
+                name: '张三',
+                sex: '男',
+                phoneNumber: '15107804030',
+                birth: '2001-11-10',
+                age: '21',
+                origin: '汉',
+                address: "广西灵山",
+            }
+        },
+        methods: {
+            handleOpen(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            handleClose(key, keyPath) {
+                console.log(key, keyPath);
+            },
+        }
+    });
+</script>
+</html>

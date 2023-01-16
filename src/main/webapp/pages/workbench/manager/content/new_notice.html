@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新建通知</title>
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!--    <script src="../../../../js/vue.min.js"></script>-->
+    <script src="../../../../js/axios.min.js"></script>
+    <script src="../../../../js/jquery-3.4.1.min.js"></script>
+    <script src="../../../../js/flexible.js"></script>
+    <style>
+        body {
+            background-color: #f9fafb;
+        }
+        .formtable {
+            width: 70%;
+            height: 78vh;
+            margin-left: 10%;
+            margin-top: 5%;
+            /*background-color: red;*/
+        }
+        .el-form-item__label {
+            font-size: 20px;
+            text-align: left;
+        }
+        .el-input {
+            font-size: 20px;
+        }
+        .el-textarea__inner {
+            display: block;
+            text-indent: 40px;
+            resize: vertical;
+            padding: 5px 15px;
+            line-height: 1.5;
+            box-sizing: border-box;
+            width: 100%;
+            font-size: 20px;
+            color: #606266;
+            background-color: #FFF;
+            background-image: none;
+            border: 1px solid #DCDFE6;
+            border-radius: 4px;
+            -webkit-transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+            transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+        }
+        .el-radio__label {
+            padding-left: 10px;
+            font-size: 20px;
+        }
+        .aaa .el-card {
+            padding-left: 14%;
+            border-radius: 4px;
+            border: 1px solid #EBEEF5;
+            background-color: #FFF;
+            overflow: hidden;
+            color: #303133;
+            -webkit-transition: .3s;
+            transition: .3s;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>新建通知</h1>
+    <el-col :span="16" :offset="4">
+        <el-card shadow="hover" class="aaa">
+            <div class="formtable">
+                <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="150px" class="demo-ruleForm">
+                    <el-form-item label="通知标题" prop="title">
+                        <el-input v-model="ruleForm.title" placeholder="请输入通知标题" maxlength="20" show-word-limit></el-input>
+                    </el-form-item>
+                    <el-form-item label="通知内容" prop="content">
+                        <el-input
+                                type="textarea"
+                                placeholder="请输入通知内容"
+                                v-model="ruleForm.content"
+                                maxlength="250"
+                                rows="12"
+                                show-word-limit
+                        >
+                        </el-input>
+                    </el-form-item>
+                    <el-form-item label="接收人" prop="acceptor">
+                        <el-radio-group v-model="ruleForm.acceptor">
+                            <el-radio label="6">全体师生及员工</el-radio>
+                            <el-radio label="4">全体教职工</el-radio>
+                            <el-radio label="3">全体辅导员</el-radio>
+                            <el-radio label="2">全体学生</el-radio>
+                            <el-radio label="1">其他教职工</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button :plain="true" type="primary" @click="submitForm('ruleForm')">立即发送</el-button>
+                        <el-button @click="resetForm('ruleForm')">重置</el-button>
+                    </el-form-item>
+                </el-form>
+            </div>
+        </el-card>
+    </el-col>
+
+</div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        mounted(){
+            axios.post('http://127.0.0.1:8080/cec/pages/settings/personal/manager/personal'
+            ).then(function (resp) {
+                vm.id = resp.data.id;
+                vm.name = resp.data.name;
+            });
+        },
+        data() {
+            return {
+                id: 0,
+                name: '',
+                ruleForm: {
+                    title: '',
+                    content: '',
+                    acceptor: '',
+                },
+                rules: {
+                    title: [
+                        { required: true, message: '请输入通知标题', trigger: 'blur' },
+                        { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+                    ],
+                    content: [
+                        { required: true, message: '请填写通知内容', trigger: 'blur' }
+                    ],
+                    acceptor: [
+                        { required: true, message: '请选择接收人', trigger: 'change' }
+                    ],
+                }
+            }
+        },
+        methods: {
+            handleOpen(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            handleClose(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        axios.post('http://127.0.0.1:8080/cec/pages/workbench/manager/content/sendNotice',
+                            {
+                                fromName: vm.name,
+                                fromId: vm.id,
+                                title: vm.ruleForm.title,
+                                content: vm.ruleForm.content,
+                                acceptor: vm.ruleForm.acceptor,
+                            }
+                        ).then(function (resp) {
+                            if(resp.data != 0) {
+                                vm.resetForm("ruleForm");
+                                Vue.prototype.$notify({
+                                    title: '成功',
+                                    message: '通知已发送',
+                                    type: 'success'
+                                });
+                            } else {
+                                Vue.prototype.$notify({
+                                    title: '成功',
+                                    message: '发送失败',
+                                    type: 'error'
+                                });
+                            }
+                        });
+                    } else {
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            }
+        }
+    });
+</script>
+</html>
